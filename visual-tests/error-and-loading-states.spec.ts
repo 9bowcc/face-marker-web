@@ -5,6 +5,12 @@
 import { test, expect } from '@playwright/test';
 import { waitForStableUI, hideDynamicElements } from './helpers/test-utils';
 
+interface WindowWithTestFlags extends Window {
+  __SLOW_PROCESSING__?: boolean;
+  __FORCE_PROCESSING_ERROR__?: boolean;
+  __MOCK_NO_FACES__?: boolean;
+}
+
 test.describe('Loading States', () => {
   test('should show initialization loading state', async ({ page }) => {
     // Block the face detection model from loading to capture the loading state
@@ -24,7 +30,7 @@ test.describe('Loading States', () => {
 
       // Full page with loading state
       await expect(page).toHaveScreenshot('loading-initialization-full.png');
-    } catch (e) {
+    } catch {
       console.log('Could not capture initialization loading state - model loaded too quickly');
     }
   });
@@ -35,7 +41,7 @@ test.describe('Loading States', () => {
 
     // Intercept image processing to make it slow
     await page.addInitScript(() => {
-      (window as any).__SLOW_PROCESSING__ = true;
+      (window as unknown as WindowWithTestFlags).__SLOW_PROCESSING__ = true;
     });
 
     const fileInput = page.locator('input[type="file"]');
@@ -51,7 +57,7 @@ test.describe('Loading States', () => {
       await hideDynamicElements(page);
 
       await expect(page).toHaveScreenshot('loading-processing.png');
-    } catch (e) {
+    } catch {
       console.log('Processing was too fast to capture loading state');
     }
   });
@@ -85,7 +91,7 @@ test.describe('Error States', () => {
 
       // Full page with error
       await expect(page).toHaveScreenshot('error-initialization-full.png');
-    } catch (e) {
+    } catch {
       console.log('Could not capture initialization error - app initialized successfully');
     }
   });
@@ -96,7 +102,7 @@ test.describe('Error States', () => {
 
     // Mock a processing error
     await page.addInitScript(() => {
-      (window as any).__FORCE_PROCESSING_ERROR__ = true;
+      (window as unknown as WindowWithTestFlags).__FORCE_PROCESSING_ERROR__ = true;
     });
 
     const fileInput = page.locator('input[type="file"]');
@@ -113,7 +119,7 @@ test.describe('Error States', () => {
 
       const errorAlert = page.locator('.MuiAlert-root').first();
       await expect(errorAlert).toHaveScreenshot('error-processing.png');
-    } catch (e) {
+    } catch {
       console.log('Could not capture processing error');
     }
   });
@@ -138,7 +144,7 @@ test.describe('Error States', () => {
       await hideDynamicElements(page);
 
       await expect(page).toHaveScreenshot('error-network.png');
-    } catch (e) {
+    } catch {
       console.log('App may use cached resources - network error not visible');
     } finally {
       await page.context().setOffline(false);
@@ -159,7 +165,7 @@ test.describe('Info and Success States', () => {
       await backendChip.waitFor({ timeout: 5000 });
       await hideDynamicElements(page);
       await expect(backendChip).toHaveScreenshot('info-backend-chip.png');
-    } catch (e) {
+    } catch {
       console.log('Backend chip not found or not visible yet');
     }
   });
@@ -192,7 +198,7 @@ test.describe('Info and Success States', () => {
 
     // Mock no faces detected
     await page.addInitScript(() => {
-      (window as any).__MOCK_NO_FACES__ = true;
+      (window as unknown as WindowWithTestFlags).__MOCK_NO_FACES__ = true;
     });
 
     const fileInput = page.locator('input[type="file"]');
@@ -209,7 +215,7 @@ test.describe('Info and Success States', () => {
 
       const infoAlert = page.locator('.MuiAlert-root').filter({ hasText: 'No faces' });
       await expect(infoAlert).toHaveScreenshot('info-no-faces.png');
-    } catch (e) {
+    } catch {
       console.log('Could not capture no faces state');
     }
   });
@@ -225,7 +231,7 @@ test.describe('Alert Component Variations', () => {
       await infoAlert.waitFor({ timeout: 5000 });
       await hideDynamicElements(page);
       await expect(infoAlert).toHaveScreenshot('alert-info.png');
-    } catch (e) {
+    } catch {
       console.log('No info alert found');
     }
   });
@@ -241,7 +247,7 @@ test.describe('Alert Component Variations', () => {
       await errorAlert.waitFor({ timeout: 15000 });
       await hideDynamicElements(page);
       await expect(errorAlert).toHaveScreenshot('alert-error.png');
-    } catch (e) {
+    } catch {
       console.log('No error alert captured');
     }
   });

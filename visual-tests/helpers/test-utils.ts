@@ -5,6 +5,18 @@
 import { Page } from '@playwright/test';
 import path from 'path';
 
+interface WindowWithMockData extends Window {
+  __MOCK_FACE_DETECTION__?: boolean;
+  __MOCK_FACES__?: Array<{
+    id: string;
+    box: { xMin: number; yMin: number; width: number; height: number };
+    keypoints: unknown[];
+    score: number;
+  }>;
+  __MOCK_LOADING__?: boolean;
+  __MOCK_ERROR__?: string;
+}
+
 /**
  * Common viewport sizes for responsive testing
  */
@@ -44,8 +56,7 @@ export async function hideDynamicElements(page: Page): Promise<void> {
  */
 export async function mockFileUpload(
   page: Page,
-  fileType: 'image' | 'video',
-  fileName = 'test-file'
+  fileType: 'image' | 'video'
 ): Promise<void> {
   const filePath = path.join(
     __dirname,
@@ -78,8 +89,9 @@ export async function waitForFaceDetection(page: Page): Promise<void> {
 export async function mockFaceDetection(page: Page): Promise<void> {
   await page.addInitScript(() => {
     // Mock the face detection service to return consistent results
-    (window as any).__MOCK_FACE_DETECTION__ = true;
-    (window as any).__MOCK_FACES__ = [
+    const win = window as unknown as WindowWithMockData;
+    win.__MOCK_FACE_DETECTION__ = true;
+    win.__MOCK_FACES__ = [
       {
         id: 'face-1',
         box: { xMin: 100, yMin: 100, width: 150, height: 150 },
@@ -133,8 +145,7 @@ export async function takeFullPageScreenshot(
  */
 export async function takeElementScreenshot(
   page: Page,
-  selector: string,
-  name: string
+  selector: string
 ): Promise<void> {
   await waitForStableUI(page);
   const element = page.locator(selector);
@@ -157,7 +168,7 @@ export async function setViewport(
  */
 export async function mockLoadingState(page: Page, isLoading: boolean): Promise<void> {
   await page.evaluate((loading) => {
-    (window as any).__MOCK_LOADING__ = loading;
+    (window as unknown as WindowWithMockData).__MOCK_LOADING__ = loading;
   }, isLoading);
 }
 
@@ -166,6 +177,6 @@ export async function mockLoadingState(page: Page, isLoading: boolean): Promise<
  */
 export async function mockErrorState(page: Page, errorMessage: string): Promise<void> {
   await page.evaluate((message) => {
-    (window as any).__MOCK_ERROR__ = message;
+    (window as unknown as WindowWithMockData).__MOCK_ERROR__ = message;
   }, errorMessage);
 }

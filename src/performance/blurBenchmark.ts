@@ -3,7 +3,7 @@
  * Tests blur performance on different region sizes and blur intensities
  */
 
-import { applyBlurToRegions, type BlurOptions } from '../utils/blur';
+import { applyBlurToRegions } from '../utils/blur';
 import type { BoundingBox } from '../types';
 import {
   SimpleBenchmark,
@@ -122,7 +122,7 @@ export async function runBlurRegionSizeBenchmarks(
       iterations
     );
 
-    const memorySnapshots = memoryMonitor.stop();
+    memoryMonitor.stop();
     const memoryStats = memoryMonitor.getMemoryStats();
 
     const result: BlurBenchmarkResult = {
@@ -193,7 +193,7 @@ export async function runBlurIntensityBenchmarks(
       iterations
     );
 
-    const memorySnapshots = memoryMonitor.stop();
+    memoryMonitor.stop();
     const memoryStats = memoryMonitor.getMemoryStats();
 
     const result: BlurBenchmarkResult = {

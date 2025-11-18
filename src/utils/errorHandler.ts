@@ -49,11 +49,11 @@ export const handleError = (error: unknown): string => {
   return 'An unknown error occurred. Please try again.';
 };
 
-export const logInfo = (message: string, ...args: any[]) => {
+export const logInfo = (message: string, ...args: unknown[]) => {
   console.log(`[INFO] ${message}`, ...args);
 };
 
-export const logWarning = (message: string, ...args: any[]) => {
+export const logWarning = (message: string, ...args: unknown[]) => {
   console.warn(`[WARNING] ${message}`, ...args);
 };
 

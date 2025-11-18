@@ -47,7 +47,7 @@ export const performanceMonitor = new PerformanceMonitor();
 /**
  * Debounce function to limit execution rate
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: never[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -69,7 +69,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function to limit execution frequency
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: never[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
@@ -101,12 +101,23 @@ export async function isWebGPUAvailable(): Promise<boolean> {
 }
 
 /**
+ * Extended Navigator interface for device memory and connection
+ */
+interface ExtendedNavigator extends Navigator {
+  deviceMemory?: number;
+  connection?: {
+    effectiveType?: string;
+  };
+}
+
+/**
  * Get device capabilities
  */
 export function getDeviceCapabilities() {
+  const nav = navigator as ExtendedNavigator;
   return {
     cores: navigator.hardwareConcurrency || 1,
-    memory: (navigator as any).deviceMemory || 'unknown',
-    connection: (navigator as any).connection?.effectiveType || 'unknown',
+    memory: nav.deviceMemory || 'unknown',
+    connection: nav.connection?.effectiveType || 'unknown',
   };
 }

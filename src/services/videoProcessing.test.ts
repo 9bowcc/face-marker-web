@@ -31,7 +31,7 @@ import { applyBlurToRegions, createFaceThumbnail } from '../utils/blur';
 
 describe('VideoProcessingService', () => {
   let service: VideoProcessingService;
-  let mockFaceDetectionService: any;
+  let mockFaceDetectionService: { detectFaces: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     service = new VideoProcessingService();
@@ -101,7 +101,7 @@ describe('VideoProcessingService', () => {
     it('should set correct video properties', async () => {
       const mockFile = new File(['video content'], 'test.mp4', { type: 'video/mp4' });
 
-      const loadPromise = service.loadVideo(mockFile);
+      service.loadVideo(mockFile);
       await new Promise(resolve => setTimeout(resolve, 0));
 
       const videoElement = document.querySelector('video');
@@ -129,7 +129,7 @@ describe('VideoProcessingService', () => {
       mockVideo.addEventListener = vi.fn((event, handler) => {
         if (event === 'seeked') {
           // Trigger the seeked event immediately in tests
-          setTimeout(() => (handler as any)(), 0);
+          setTimeout(() => (handler as EventListener)(new Event('seeked')), 0);
         }
         originalAddEventListener(event, handler);
       });
@@ -265,7 +265,7 @@ describe('VideoProcessingService', () => {
         ],
       ];
 
-      mockFaceDetectionService.detectFaces.mockImplementation((canvas, options) => {
+      mockFaceDetectionService.detectFaces.mockImplementation(() => {
         return Promise.resolve(mockDetections[0] || []);
       });
 
@@ -392,25 +392,9 @@ describe('VideoProcessingService', () => {
   describe('calculateIoU', () => {
     it('should calculate intersection over union correctly', () => {
       // Access private method through service instance for testing
-      const box1 = {
-        xMin: 0,
-        yMin: 0,
-        xMax: 10,
-        yMax: 10,
-        width: 10,
-        height: 10,
-      };
-
-      const box2 = {
-        xMin: 5,
-        yMin: 5,
-        xMax: 15,
-        yMax: 15,
-        width: 10,
-        height: 10,
-      };
-
-      // IoU calculation:
+      // IoU calculation example:
+      // Box 1: (0,0) to (10,10)
+      // Box 2: (5,5) to (15,15)
       // Intersection: 5x5 = 25
       // Union: 100 + 100 - 25 = 175
       // IoU: 25/175 ≈ 0.1429
@@ -421,40 +405,17 @@ describe('VideoProcessingService', () => {
     });
 
     it('should return 0 for non-overlapping boxes', () => {
-      const box1 = {
-        xMin: 0,
-        yMin: 0,
-        xMax: 10,
-        yMax: 10,
-        width: 10,
-        height: 10,
-      };
-
-      const box2 = {
-        xMin: 20,
-        yMin: 20,
-        xMax: 30,
-        yMax: 30,
-        width: 10,
-        height: 10,
-      };
-
+      // Test non-overlapping boxes
+      // Box 1: (0,0) to (10,10)
+      // Box 2: (20,20) to (30,30)
       // No intersection, IoU should be 0
       expect(true).toBe(true); // Placeholder
     });
 
     it('should return 1 for identical boxes', () => {
-      const box1 = {
-        xMin: 0,
-        yMin: 0,
-        xMax: 10,
-        yMax: 10,
-        width: 10,
-        height: 10,
-      };
-
-      const box2 = { ...box1 };
-
+      // Test identical boxes
+      // Box 1: (0,0) to (10,10)
+      // Box 2: (0,0) to (10,10)
       // Complete overlap, IoU should be 1
       expect(true).toBe(true); // Placeholder
     });
@@ -480,7 +441,7 @@ describe('VideoProcessingService', () => {
       mockVideo.addEventListener = vi.fn((event, handler) => {
         if (event === 'seeked') {
           // Trigger the seeked event immediately in tests
-          setTimeout(() => (handler as any)(), 0);
+          setTimeout(() => (handler as EventListener)(new Event('seeked')), 0);
         }
         originalAddEventListener(event, handler);
       });
@@ -516,22 +477,22 @@ describe('VideoProcessingService', () => {
           getAudioTracks: () => [],
           addTrack: vi.fn(),
           removeTrack: vi.fn(),
-        } as any;
+        } as unknown as MediaStream;
       });
 
       // Mock MediaRecorder
       global.MediaRecorder = vi.fn().mockImplementation(() => ({
         start: vi.fn(),
-        stop: vi.fn(function(this: any) {
+        stop: vi.fn(function(this: MediaRecorder) {
           // Trigger onstop callback
           if (this.onstop) {
-            setTimeout(() => this.onstop(), 0);
+            setTimeout(() => this.onstop!(new Event('stop')), 0);
           }
         }),
         ondataavailable: null,
         onstop: null,
         state: 'inactive',
-      })) as any;
+      })) as unknown as typeof MediaRecorder;
     });
 
     it('should process video with blur successfully', async () => {
@@ -760,7 +721,7 @@ describe('VideoProcessingService', () => {
       const originalAddEventListener = mockVideo.addEventListener.bind(mockVideo);
       mockVideo.addEventListener = vi.fn((event, handler) => {
         if (event === 'seeked') {
-          setTimeout(() => (handler as any)(), 0);
+          setTimeout(() => (handler as EventListener)(new Event('seeked')), 0);
         }
         originalAddEventListener(event, handler);
       });
@@ -798,7 +759,7 @@ describe('VideoProcessingService', () => {
       const originalAddEventListener = mockVideo.addEventListener.bind(mockVideo);
       mockVideo.addEventListener = vi.fn((event, handler) => {
         if (event === 'seeked') {
-          setTimeout(() => (handler as any)(), 0);
+          setTimeout(() => (handler as EventListener)(new Event('seeked')), 0);
         }
         originalAddEventListener(event, handler);
       });

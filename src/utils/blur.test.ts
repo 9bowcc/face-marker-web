@@ -4,13 +4,11 @@ import type { BoundingBox } from '../types';
 
 describe('blur utilities', () => {
   let canvas: HTMLCanvasElement;
-  let ctx: CanvasRenderingContext2D;
 
   beforeEach(() => {
     canvas = document.createElement('canvas');
     canvas.width = 100;
     canvas.height = 100;
-    ctx = canvas.getContext('2d')!;
   });
 
   describe('applyBlurToRegions', () => {
@@ -90,7 +88,9 @@ describe('blur utilities', () => {
     it('should throw error if canvas context is unavailable', () => {
       const mockCanvas = {
         getContext: () => null,
-      } as any;
+        width: 100,
+        height: 100,
+      } as unknown as HTMLCanvasElement;
 
       const regions: BoundingBox[] = [
         {

@@ -104,8 +104,7 @@ function processVideoFrame(canvas: HTMLCanvasElement): void {
  * Benchmark video frame processing rate
  */
 export async function benchmarkFrameProcessingRate(
-  config: VideoConfig,
-  iterations = 10
+  config: VideoConfig
 ): Promise<VideoBenchmarkResult> {
   console.log(`\n🎬 Benchmarking ${config.name}...`);
 
@@ -129,7 +128,7 @@ export async function benchmarkFrameProcessingRate(
     totalFrames
   );
 
-  const memorySnapshots = memoryMonitor.stop();
+  memoryMonitor.stop();
   const memoryStats = memoryMonitor.getMemoryStats();
 
   const averageFrameTime = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;

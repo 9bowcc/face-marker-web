@@ -112,7 +112,7 @@ async function benchmarkBackend(
     iterations
   );
 
-  const memorySnapshots = memoryMonitor.stop();
+  memoryMonitor.stop();
   const memoryStats = memoryMonitor.getMemoryStats();
 
   // Cleanup
