@@ -24,12 +24,6 @@ test.describe('Export Functionality', () => {
 
     await page.waitForTimeout(3000);
 
-    // Look for download/export button
-    const downloadButton =
-      page.getByRole('button', { name: /download/i }) ||
-      page.getByRole('button', { name: /export/i }) ||
-      page.getByRole('button', { name: /save/i });
-
     // Button should exist (might be disabled if no processing done)
     const buttonCount =
       (await page.getByRole('button', { name: /download/i }).count()) +
@@ -233,10 +227,7 @@ test.describe('Export Functionality', () => {
 
     await page.waitForTimeout(3000);
 
-    // Look for quality settings or controls
-    const hasQualityControl = (await page.getByText(/quality/i).count()) > 0;
-
-    // Quality controls might be available
+    // Look for quality settings or controls - might be available
     expect(true).toBe(true);
   });
 
@@ -252,10 +243,6 @@ test.describe('Export Functionality', () => {
     });
 
     await page.waitForTimeout(3000);
-
-    // Look for cancel button during export
-    // This might not be visible for fast operations
-    const cancelButton = page.getByRole('button', { name: /cancel/i });
 
     // Cancel button might be available during long operations
     expect(true).toBe(true);
@@ -296,11 +283,6 @@ test.describe('Export Functionality', () => {
     // Look for success message or notification
     await page.waitForTimeout(1000);
 
-    const hasSuccessMessage =
-      (await page.getByText(/success/i).count()) > 0 ||
-      (await page.getByText(/downloaded/i).count()) > 0 ||
-      (await page.getByText(/saved/i).count()) > 0;
-
     // Success message might appear
     expect(true).toBe(true);
   });
@@ -319,20 +301,16 @@ test.describe('Export Functionality', () => {
     await page.waitForTimeout(3000);
 
     // Try to download without applying blur
-    const downloadPromise = page.waitForEvent('download', { timeout: 10000 }).catch(() => null);
-
     const downloadButtons = [
       page.getByRole('button', { name: /download/i }),
       page.getByRole('button', { name: /export/i }),
       page.getByRole('button', { name: /save/i }),
     ];
 
-    let buttonClicked = false;
+    // Check if any download button exists
     for (const button of downloadButtons) {
       if ((await button.count()) > 0) {
-        const isEnabled = await button.isEnabled();
         // Button might be disabled if no processing was done
-        buttonClicked = true;
         break;
       }
     }
