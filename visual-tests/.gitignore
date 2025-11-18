@@ -1,0 +1,11 @@
+# Visual regression test artifacts
+test-results/
+playwright-report/
+
+# Screenshot comparison failures
+*-actual.png
+*-diff.png
+
+# Note: Keep baseline screenshots in version control
+# They are stored in the __snapshots__ directories
+# and should be committed to track UI changes

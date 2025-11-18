@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright / Visual regression tests
+test-results/
+playwright-report/
+visual-tests/**/*-actual.png
+visual-tests/**/*-diff.png
+# Keep baseline snapshots in version control
+!visual-tests/**/__snapshots__/

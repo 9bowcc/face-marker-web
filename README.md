@@ -68,6 +68,14 @@ npm run test:coverage
 6. Apply blur effect
 7. Download the processed file
 
+## Testing
+
+This project includes comprehensive testing at multiple levels to ensure quality and reliability.
+
+### Unit Tests
+
+Unit tests cover utility functions, services, and components using Vitest and React Testing Library.
+
 ## How It Works
 
 ### Face Detection
@@ -127,7 +135,16 @@ src/
 │   ├── imageProcessing.ts     # Image processing
 │   └── videoProcessing.ts     # Video processing with tracking
 ├── utils/             # Utility functions
-│   └── blur.ts               # Blur algorithms
+│   ├── blur.ts               # Blur algorithms
+│   ├── performance.ts        # Performance monitoring
+│   └── errorHandler.ts       # Error handling
+├── performance/       # Performance testing suite
+│   ├── index.ts              # Main test runner
+│   ├── utils.ts              # Benchmarking utilities
+│   ├── faceDetectionBenchmark.ts  # Face detection tests
+│   ├── blurBenchmark.ts      # Blur algorithm tests
+│   ├── videoBenchmark.ts     # Video processing tests
+│   └── backendComparison.ts  # WebGPU vs WebGL tests
 ├── types/             # TypeScript type definitions
 │   └── index.ts
 ├── App.tsx            # Main application component
@@ -136,12 +153,14 @@ src/
 
 ## Testing
 
-This project uses Vitest and React Testing Library for comprehensive testing.
+This project includes comprehensive testing at multiple levels to ensure quality and reliability.
 
-### Running Tests
+### Unit Tests
+
+Unit tests cover utility functions, services, and components using Vitest and React Testing Library.
 
 ```bash
-# Run all tests
+# Run all unit tests
 npm test
 
 # Run tests in watch mode
@@ -154,20 +173,124 @@ npm run test:coverage
 npm run test:ui
 ```
 
+### Performance Testing
+
+Comprehensive performance benchmarking suite for all critical components:
+
+```bash
+# Run interactive performance tests
+npm run perf
+
+# Run quick tests (subset for CI/CD)
+npm run perf:quick
+
+# Generate performance report
+npm run perf:report
+```
+
+**What's Benchmarked:**
+- Face detection performance across image sizes (480p to 4K)
+- Blur algorithm efficiency on different region sizes
+- Video frame processing rates and throughput
+- Memory usage and leak detection
+- WebGPU vs WebGL backend comparison
+
+**Key Metrics:**
+- Mean/median processing time
+- Operations per second
+- Memory consumption and growth
+- Frame processing rates
+- Statistical confidence intervals
+
+See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed performance testing documentation.
+
+### E2E Tests
+
+End-to-end tests verify complete user workflows using Playwright. These tests cover:
+
+- **Image Upload & Face Detection**: Testing image file upload and face detection workflow
+- **Video Upload & Face Detection**: Testing video file upload and processing
+- **Face Selection & Blur**: Testing face selection UI and blur application
+- **Export Functionality**: Testing download and export features
+- **Error Handling**: Testing error scenarios and edge cases
+
+```bash
+# Run E2E tests
+npm run e2e
+
+# Run E2E tests with UI mode (interactive)
+npm run e2e:ui
+
+# Run E2E tests in headed mode (see browser)
+npm run e2e:headed
+
+# Debug E2E tests
+npm run e2e:debug
+
+# View E2E test report
+npm run e2e:report
+```
+
+### Visual Regression Tests
+
+Visual regression tests detect unintended UI changes by comparing screenshots against baseline images. These tests cover:
+
+- **Component Appearance**: FileUploader, ImageProcessor, VideoProcessor
+- **UI States**: Loading, error, success, empty states
+- **Face Selection**: Selected vs unselected face states
+- **Responsive Design**: Mobile, tablet, desktop, and large desktop viewports
+- **Browser Compatibility**: Chromium, Firefox, WebKit, mobile browsers
+
+```bash
+# Run visual regression tests
+npm run visual
+
+# Run with interactive UI
+npm run visual:ui
+
+# Update baselines after intentional UI changes
+npm run visual:update
+
+# View visual test report
+npm run visual:report
+
+# Test specific browser
+npm run visual:chromium
+npm run visual:firefox
+npm run visual:webkit
+
+# Test mobile viewports
+npm run visual:mobile
+
+# Debug visual tests
+npm run visual:debug
+```
+
+**When to update baselines:**
+- After intentional UI/styling changes
+- When adding new UI components
+- After layout modifications
+- When updating colors, fonts, or spacing
+
+See [VISUAL_TESTING.md](VISUAL_TESTING.md) for detailed documentation on visual regression testing workflow.
+
 ### Test Coverage
 
 The project includes:
 - **Unit tests** for utility functions (blur algorithms, error handling)
 - **Service tests** for face detection and image/video processing
 - **Component tests** for React components
-- **Integration tests** for end-to-end workflows
+- **E2E tests** for complete user workflows
+- **Visual regression tests** for UI consistency
 
 ## CI/CD
 
 This project uses GitHub Actions for continuous integration and deployment:
 
-- **Automated Testing**: All tests run on push and pull requests
+- **Automated Testing**: All unit and E2E tests run on push and pull requests
 - **Multi-version Testing**: Tests run on Node.js 18.x and 20.x
+- **E2E Testing**: Playwright E2E tests verify complete user workflows
+- **Visual Regression**: Automated visual testing across multiple browsers
 - **Linting**: ESLint checks run automatically
 - **Type Checking**: TypeScript compilation verification
 - **Build Verification**: Production build tested on every commit

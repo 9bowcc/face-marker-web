@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Marker Web - Performance Tests</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 40px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 2.5rem;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1rem;
+      }
+
+      .buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      button {
+        padding: 15px 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: white;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .btn-success {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .btn-warning {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      }
+
+      .btn-info {
+        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+      }
+
+      .status {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+      }
+
+      .status.running {
+        border-left-color: #f5576c;
+        background: #fff5f5;
+      }
+
+      .status.success {
+        border-left-color: #00f2fe;
+        background: #f0f9ff;
+      }
+
+      .status.error {
+        border-left-color: #dc3545;
+        background: #fff0f0;
+      }
+
+      .console {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+        max-height: 600px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin-top: 20px;
+      }
+
+      .console:empty {
+        display: none;
+      }
+
+      .progress {
+        width: 100%;
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 15px 0;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+
+      .info-box {
+        background: #e7f3ff;
+        border: 1px solid #b3d9ff;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+
+      .info-box h3 {
+        color: #0056b3;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
+
+      .info-box ul {
+        margin-left: 20px;
+        color: #333;
+      }
+
+      .info-box li {
+        margin: 5px 0;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>⚡ Performance Test Suite</h1>
+      <p class="subtitle">Face Marker Web - Comprehensive Performance Benchmarks</p>
+
+      <div class="info-box">
+        <h3>What This Tests:</h3>
+        <ul>
+          <li><strong>Face Detection:</strong> Performance across different image sizes</li>
+          <li><strong>Blur Algorithm:</strong> Stack blur efficiency on various region sizes</li>
+          <li><strong>Video Processing:</strong> Frame processing rates and memory usage</li>
+          <li><strong>Backend Comparison:</strong> WebGPU vs WebGL performance</li>
+        </ul>
+      </div>
+
+      <div class="buttons">
+        <button class="btn-primary" onclick="runFullTests()">
+          Run Full Suite
+        </button>
+        <button class="btn-secondary" onclick="runQuickTests()">
+          Run Quick Tests
+        </button>
+        <button class="btn-success" onclick="runFaceDetectionTests()">
+          Face Detection
+        </button>
+        <button class="btn-warning" onclick="runBlurTests()">
+          Blur Algorithm
+        </button>
+        <button class="btn-info" onclick="runVideoTests()">
+          Video Processing
+        </button>
+        <button class="btn-primary" onclick="runBackendTests()">
+          Backend Comparison
+        </button>
+      </div>
+
+      <div id="status" class="status" style="display: none;">
+        <strong>Status:</strong> <span id="statusText">Ready</span>
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div id="console" class="console"></div>
+    </div>
+
+    <script type="module">
+      import { runAllPerformanceTests, runQuickPerformanceTests, runSpecificTest } from './src/performance/index.ts';
+
+      const statusEl = document.getElementById('status');
+      const statusText = document.getElementById('statusText');
+      const progressBar = document.getElementById('progressBar');
+      const consoleEl = document.getElementById('console');
+
+      function updateStatus(text, type = 'running') {
+        statusEl.style.display = 'block';
+        statusEl.className = `status ${type}`;
+        statusText.innerHTML = type === 'running' ? `<span class="spinner"></span>${text}` : text;
+      }
+
+      function updateProgress(percent) {
+        progressBar.style.width = `${percent}%`;
+      }
+
+      // Override console.log to capture output
+      const originalLog = console.log;
+      console.log = function (...args) {
+        originalLog.apply(console, args);
+        const text = args.map(arg =>
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' ');
+        consoleEl.textContent += text + '\n';
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+      };
+
+      async function runTests(testFn, name) {
+        try {
+          consoleEl.textContent = '';
+          updateStatus(`Running ${name}...`, 'running');
+          updateProgress(0);
+
+          const results = await testFn();
+
+          updateStatus(`✅ ${name} completed successfully`, 'success');
+          updateProgress(100);
+
+          console.log('\n' + '='.repeat(60));
+          console.log('Tests completed! Check the console output above for detailed results.');
+        } catch (error) {
+          updateStatus(`❌ ${name} failed: ${error.message}`, 'error');
+          console.error('Error:', error);
+        }
+      }
+
+      window.runFullTests = () => runTests(() => runAllPerformanceTests(), 'Full Test Suite');
+      window.runQuickTests = () => runTests(() => runQuickPerformanceTests(), 'Quick Tests');
+      window.runFaceDetectionTests = () => runTests(() => runSpecificTest('face-detection'), 'Face Detection Tests');
+      window.runBlurTests = () => runTests(() => runSpecificTest('blur'), 'Blur Tests');
+      window.runVideoTests = () => runTests(() => runSpecificTest('video'), 'Video Tests');
+      window.runBackendTests = () => runTests(() => runSpecificTest('backend-comparison'), 'Backend Comparison');
+    </script>
+  </body>
+</html>

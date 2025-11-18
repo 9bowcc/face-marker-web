@@ -1,0 +1,99 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-18",
+  "platform": {
+    "description": "Baseline performance targets for Face Marker Web",
+    "note": "These are target thresholds, not actual results. Run tests to generate real results."
+  },
+  "baselines": {
+    "faceDetection": {
+      "small_640x480": {
+        "maxMean": 100,
+        "targetOps": 10,
+        "description": "Face detection on 640x480 image"
+      },
+      "medium_1280x720": {
+        "maxMean": 200,
+        "targetOps": 5,
+        "description": "Face detection on 1280x720 image"
+      },
+      "large_1920x1080": {
+        "maxMean": 400,
+        "targetOps": 2.5,
+        "description": "Face detection on 1920x1080 image"
+      },
+      "extraLarge_3840x2160": {
+        "maxMean": 1000,
+        "targetOps": 1,
+        "description": "Face detection on 3840x2160 image"
+      }
+    },
+    "blurAlgorithm": {
+      "smallRegion_100x100": {
+        "maxMean": 10,
+        "targetOps": 100,
+        "description": "Stack blur on 100x100 region"
+      },
+      "mediumRegion_200x200": {
+        "maxMean": 30,
+        "targetOps": 30,
+        "description": "Stack blur on 200x200 region"
+      },
+      "largeRegion_400x400": {
+        "maxMean": 100,
+        "targetOps": 10,
+        "description": "Stack blur on 400x400 region"
+      },
+      "fullRegion_800x600": {
+        "maxMean": 300,
+        "targetOps": 3,
+        "description": "Stack blur on 800x600 region"
+      }
+    },
+    "videoProcessing": {
+      "sd_480p": {
+        "minFPS": 30,
+        "maxFrameTime": 33,
+        "description": "Frame processing at 640x480"
+      },
+      "hd_720p": {
+        "minFPS": 24,
+        "maxFrameTime": 42,
+        "description": "Frame processing at 1280x720"
+      },
+      "fullHD_1080p": {
+        "minFPS": 15,
+        "maxFrameTime": 67,
+        "description": "Frame processing at 1920x1080"
+      },
+      "fourK_2160p": {
+        "minFPS": 10,
+        "maxFrameTime": 100,
+        "description": "Frame processing at 3840x2160"
+      }
+    },
+    "backendComparison": {
+      "webgpu": {
+        "description": "WebGPU backend when available",
+        "expectedSpeedup": "1.2-1.5x over WebGL",
+        "initTime": "< 2000ms"
+      },
+      "webgl": {
+        "description": "WebGL backend fallback",
+        "initTime": "< 1500ms"
+      }
+    }
+  },
+  "memoryThresholds": {
+    "maxGrowthPerOperation": 1000,
+    "description": "Maximum acceptable memory growth in bytes per operation",
+    "unit": "bytes"
+  },
+  "notes": [
+    "Thresholds are designed for modern desktop browsers (Chrome, Edge, Firefox)",
+    "Mobile performance may be lower",
+    "WebGPU provides better performance when available",
+    "Results vary based on hardware capabilities",
+    "Run npm run perf to generate actual performance reports"
+  ]
+}
