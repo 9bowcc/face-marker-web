@@ -68,14 +68,6 @@ npm run test:coverage
 6. Apply blur effect
 7. Download the processed file
 
-## Testing
-
-This project includes comprehensive testing at multiple levels to ensure quality and reliability.
-
-### Unit Tests
-
-Unit tests cover utility functions, services, and components using Vitest and React Testing Library.
-
 ## How It Works
 
 ### Face Detection
