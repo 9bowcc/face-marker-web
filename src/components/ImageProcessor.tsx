@@ -2,7 +2,7 @@
  * Image processing component with face detection and blur
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -20,6 +20,16 @@ import BlurOnIcon from '@mui/icons-material/BlurOn';
 import type { FaceDetection, ProcessingOptions } from '../types';
 import { imageProcessingService } from '../services/imageProcessing';
 import { createFaceThumbnail } from '../utils/blur';
+import { handleError } from '../utils/errorHandler';
+import {
+  DEFAULT_BLUR_INTENSITY,
+  DEFAULT_DETECTION_CONFIDENCE,
+  MIN_BLUR_INTENSITY,
+  MAX_BLUR_INTENSITY,
+  FACE_BOX_SELECTED_COLOR,
+  FACE_BOX_UNSELECTED_COLOR,
+  FACE_BOX_LINE_WIDTH,
+} from '../constants';
 
 interface ImageProcessorProps {
   file: File;
@@ -32,25 +42,22 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
   const [error, setError] = useState<string | null>(null);
   const [faces, setFaces] = useState<FaceDetection[]>([]);
   const [selectedFaces, setSelectedFaces] = useState<Set<string>>(new Set());
-  const [blurIntensity, setBlurIntensity] = useState(20);
+  const [blurIntensity, setBlurIntensity] = useState(DEFAULT_BLUR_INTENSITY);
   const [processed, setProcessed] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const displayCanvasRef = useRef<HTMLCanvasElement>(null);
+  const thumbnailUrlsRef = useRef<string[]>([]);
 
-  useEffect(() => {
-    loadAndDetect();
-  }, [file]);
-
-  const loadAndDetect = async () => {
+  const loadAndDetect = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
       const options: Partial<ProcessingOptions> = {
-        detectionConfidence: 0.5,
-        blurIntensity: 20,
+        detectionConfidence: DEFAULT_DETECTION_CONFIDENCE,
+        blurIntensity: DEFAULT_BLUR_INTENSITY,
         useWebGPU: true,
       };
 
@@ -77,11 +84,53 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
 
       setLoading(false);
     } catch (err) {
-      console.error('Error processing image:', err);
-      setError('Failed to process image. Please try again.');
+      const errorMessage = handleError(err);
+      setError(errorMessage);
       setLoading(false);
     }
-  };
+  }, [file]);
+
+  useEffect(() => {
+    loadAndDetect();
+
+    // Cleanup function
+    return () => {
+      // Revoke all thumbnail URLs
+      thumbnailUrlsRef.current.forEach(url => {
+        if (url.startsWith('data:')) return; // Skip data URLs
+        URL.revokeObjectURL(url);
+      });
+      thumbnailUrlsRef.current = [];
+
+      // Clean up canvas contexts
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        }
+        canvasRef.current.width = 0;
+        canvasRef.current.height = 0;
+      }
+
+      if (originalCanvasRef.current) {
+        const ctx = originalCanvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, originalCanvasRef.current.width, originalCanvasRef.current.height);
+        }
+        originalCanvasRef.current.width = 0;
+        originalCanvasRef.current.height = 0;
+      }
+
+      if (displayCanvasRef.current) {
+        const ctx = displayCanvasRef.current.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, displayCanvasRef.current.width, displayCanvasRef.current.height);
+        }
+        displayCanvasRef.current.width = 0;
+        displayCanvasRef.current.height = 0;
+      }
+    };
+  }, [loadAndDetect]);
 
   const handleFaceToggle = (faceId: string) => {
     setSelectedFaces((prev) => {
@@ -116,8 +165,8 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
       setProcessed(true);
       setProcessing(false);
     } catch (err) {
-      console.error('Error applying blur:', err);
-      setError('Failed to apply blur effect.');
+      const errorMessage = handleError(err);
+      setError(errorMessage);
       setProcessing(false);
     }
   };
@@ -130,8 +179,8 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
       const filename = `blurred_${file.name.replace(/\.[^/.]+$/, '')}.png`;
       imageProcessingService.downloadImage(blob, filename);
     } catch (err) {
-      console.error('Error exporting image:', err);
-      setError('Failed to export image.');
+      const errorMessage = handleError(err);
+      setError(errorMessage);
     }
   };
 
@@ -154,12 +203,12 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
     faces.forEach((face) => {
       const isSelected = selectedFaces.has(face.id);
 
-      ctx.strokeStyle = isSelected ? '#00ff00' : '#ff0000';
-      ctx.lineWidth = 3;
+      ctx.strokeStyle = isSelected ? FACE_BOX_SELECTED_COLOR : FACE_BOX_UNSELECTED_COLOR;
+      ctx.lineWidth = FACE_BOX_LINE_WIDTH;
       ctx.strokeRect(face.box.xMin, face.box.yMin, face.box.width, face.box.height);
 
       // Draw label
-      ctx.fillStyle = isSelected ? '#00ff00' : '#ff0000';
+      ctx.fillStyle = isSelected ? FACE_BOX_SELECTED_COLOR : FACE_BOX_UNSELECTED_COLOR;
       ctx.font = '16px Arial';
       ctx.fillText(
         isSelected ? '✓ Selected' : '✗ Not selected',
@@ -200,10 +249,28 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
   }
 
   return (
-    <Box>
+    <Box role="region" aria-label="Image processing interface">
       <Typography variant="h5" gutterBottom>
         Image Processing
       </Typography>
+
+      {/* Live region for processing status */}
+      <Box
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        sx={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+        }}
+      >
+        {processing && 'Processing image, please wait...'}
+        {processed && !processing && 'Image processing complete'}
+        {loading && 'Detecting faces in image...'}
+      </Box>
 
       {faces.length === 0 && (
         <Alert severity="info" sx={{ mb: 2 }}>
@@ -217,8 +284,8 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
             <Typography variant="h6" gutterBottom>
               Detected Faces ({faces.length})
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }}>
-              {faces.map((face) => {
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }} role="list" aria-label="Detected faces">
+              {faces.map((face, index) => {
                 const thumbnail = canvasRef.current
                   ? createFaceThumbnail(canvasRef.current, face.box)
                   : '';
@@ -228,14 +295,15 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
                     key={face.id}
                     sx={{
                       cursor: 'pointer',
-                      border: selectedFaces.has(face.id) ? '2px solid #00ff00' : '2px solid transparent',
+                      border: selectedFaces.has(face.id) ? `2px solid ${FACE_BOX_SELECTED_COLOR}` : '2px solid transparent',
                     }}
                     onClick={() => handleFaceToggle(face.id)}
+                    role="listitem"
                   >
                     {thumbnail && (
                       <img
                         src={thumbnail}
-                        alt="Face"
+                        alt={`Detected face ${index + 1}`}
                         style={{ width: '100%', height: 'auto' }}
                       />
                     )}
@@ -244,8 +312,12 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
                         <Checkbox
                           checked={selectedFaces.has(face.id)}
                           size="small"
+                          aria-label={`Face ${index + 1}, ${selectedFaces.has(face.id) ? 'selected' : 'not selected'}`}
+                          inputProps={{
+                            'aria-describedby': `face-${face.id}-label`,
+                          }}
                         />
-                        <Typography variant="caption">
+                        <Typography variant="caption" id={`face-${face.id}-label`}>
                           {selectedFaces.has(face.id) ? 'Selected' : 'Click to select'}
                         </Typography>
                       </Box>
@@ -257,15 +329,20 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
           </Paper>
 
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography gutterBottom>
+            <Typography id="blur-intensity-label" gutterBottom>
               Blur Intensity: {blurIntensity}
             </Typography>
             <Slider
               value={blurIntensity}
               onChange={(_, value) => setBlurIntensity(value as number)}
-              min={5}
-              max={50}
+              min={MIN_BLUR_INTENSITY}
+              max={MAX_BLUR_INTENSITY}
               disabled={processing}
+              aria-labelledby="blur-intensity-label"
+              aria-valuemin={MIN_BLUR_INTENSITY}
+              aria-valuemax={MAX_BLUR_INTENSITY}
+              aria-valuenow={blurIntensity}
+              aria-valuetext={`Blur intensity ${blurIntensity}`}
             />
           </Paper>
 
@@ -275,6 +352,7 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
               startIcon={processing ? <CircularProgress size={20} /> : <BlurOnIcon />}
               onClick={handleApplyBlur}
               disabled={processing || selectedFaces.size === 0}
+              aria-label={processing ? 'Applying blur effect' : 'Apply blur to selected faces'}
             >
               Apply Blur
             </Button>
@@ -283,24 +361,27 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
               startIcon={<DownloadIcon />}
               onClick={handleExport}
               disabled={!processed}
+              aria-label="Download processed image"
             >
               Export Image
             </Button>
-            <Button variant="outlined" onClick={onBack}>
+            <Button variant="outlined" onClick={onBack} aria-label="Go back to file upload">
               Back
             </Button>
           </Box>
         </>
       )}
 
-      <Paper sx={{ p: 2, overflow: 'auto', maxHeight: '70vh' }}>
+      <Paper sx={{ p: 2, overflow: 'auto', maxHeight: '70vh' }} role="img" aria-label="Image preview with face detection boxes">
         <canvas
           ref={canvasRef}
           style={{ display: 'none' }}
+          aria-hidden="true"
         />
         <canvas
           ref={displayCanvasRef}
           style={{ maxWidth: '100%', height: 'auto' }}
+          aria-label="Processed image with detected faces highlighted"
         />
       </Paper>
     </Box>
