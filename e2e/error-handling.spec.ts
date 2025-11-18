@@ -65,12 +65,6 @@ test.describe('Error Handling', () => {
     await page.waitForTimeout(3000);
 
     // Should either show error or handle gracefully
-    // Look for error messages
-    const hasError =
-      (await page.getByText(/error/i).count()) > 0 ||
-      (await page.getByText(/failed/i).count()) > 0 ||
-      (await page.getByText(/invalid/i).count()) > 0;
-
     // Error handling should occur
     expect(true).toBe(true);
   });
@@ -115,15 +109,9 @@ test.describe('Error Handling', () => {
     expect(true).toBe(true);
   });
 
-  test('should show error when face detection fails', async ({ page }) => {
+  test('should show error when face detection fails', async () => {
     // This would require mocking the face detection service to fail
     // For now, we verify error handling structure exists
-
-    // Check if error boundaries or error messages are in place
-    const hasErrorHandling =
-      (await page.getByText(/try again/i).count()) > 0 ||
-      (await page.getByText(/refresh/i).count()) > 0;
-
     expect(true).toBe(true);
   });
 
@@ -168,13 +156,7 @@ test.describe('Error Handling', () => {
     // Check if app detects and reports browser compatibility
     await page.waitForTimeout(2000);
 
-    // Look for compatibility warnings
-    const hasCompatibilityInfo =
-      (await page.getByText(/browser/i).count()) > 0 ||
-      (await page.getByText(/support/i).count()) > 0 ||
-      (await page.getByText(/WebGPU/i).count()) > 0;
-
-    // Should provide browser info
+    // Should provide browser info if needed
     expect(true).toBe(true);
   });
 
@@ -306,13 +288,7 @@ test.describe('Error Handling', () => {
     // Check for loading indicators immediately
     await page.waitForTimeout(500);
 
-    const hasLoadingIndicator =
-      (await page.getByText(/loading/i).count()) > 0 ||
-      (await page.getByText(/processing/i).count()) > 0 ||
-      (await page.getByText(/detecting/i).count()) > 0 ||
-      (await page.locator('[role="progressbar"]').count()) > 0;
-
-    // Loading state should appear
+    // Loading state should appear during processing
     expect(true).toBe(true);
   });
 });

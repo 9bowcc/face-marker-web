@@ -102,32 +102,35 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
       });
       thumbnailUrlsRef.current = [];
 
-      // Clean up canvas contexts
-      if (canvasRef.current) {
-        const ctx = canvasRef.current.getContext('2d');
+      // Clean up canvas contexts - copy ref values to local variables
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
         if (ctx) {
-          ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
-        canvasRef.current.width = 0;
-        canvasRef.current.height = 0;
+        canvas.width = 0;
+        canvas.height = 0;
       }
 
-      if (originalCanvasRef.current) {
-        const ctx = originalCanvasRef.current.getContext('2d');
+      const originalCanvas = originalCanvasRef.current;
+      if (originalCanvas) {
+        const ctx = originalCanvas.getContext('2d');
         if (ctx) {
-          ctx.clearRect(0, 0, originalCanvasRef.current.width, originalCanvasRef.current.height);
+          ctx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
         }
-        originalCanvasRef.current.width = 0;
-        originalCanvasRef.current.height = 0;
+        originalCanvas.width = 0;
+        originalCanvas.height = 0;
       }
 
-      if (displayCanvasRef.current) {
-        const ctx = displayCanvasRef.current.getContext('2d');
+      const displayCanvas = displayCanvasRef.current;
+      if (displayCanvas) {
+        const ctx = displayCanvas.getContext('2d');
         if (ctx) {
-          ctx.clearRect(0, 0, displayCanvasRef.current.width, displayCanvasRef.current.height);
+          ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
         }
-        displayCanvasRef.current.width = 0;
-        displayCanvasRef.current.height = 0;
+        displayCanvas.width = 0;
+        displayCanvas.height = 0;
       }
     };
   }, [loadAndDetect]);
@@ -184,7 +187,7 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
     }
   };
 
-  const drawFaceBoxes = () => {
+  const drawFaceBoxes = useCallback(() => {
     if (!canvasRef.current || !displayCanvasRef.current) return;
 
     const canvas = displayCanvasRef.current;
@@ -216,11 +219,11 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
         face.box.yMin - 5
       );
     });
-  };
+  }, [faces, selectedFaces]);
 
   useEffect(() => {
     drawFaceBoxes();
-  }, [faces, selectedFaces, processed]);
+  }, [drawFaceBoxes, processed]);
 
   if (loading) {
     return (
