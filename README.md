@@ -44,6 +44,18 @@ npm run build
 
 # Preview production build
 npm run preview
+
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with UI
+npm run test:ui
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
 ### Usage
@@ -122,6 +134,47 @@ src/
 └── main.tsx           # Application entry point
 ```
 
+## Testing
+
+This project uses Vitest and React Testing Library for comprehensive testing.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Run tests with interactive UI
+npm run test:ui
+```
+
+### Test Coverage
+
+The project includes:
+- **Unit tests** for utility functions (blur algorithms, error handling)
+- **Service tests** for face detection and image/video processing
+- **Component tests** for React components
+- **Integration tests** for end-to-end workflows
+
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **Automated Testing**: All tests run on push and pull requests
+- **Multi-version Testing**: Tests run on Node.js 18.x and 20.x
+- **Linting**: ESLint checks run automatically
+- **Type Checking**: TypeScript compilation verification
+- **Build Verification**: Production build tested on every commit
+- **Bundle Analysis**: Automatic bundle size reporting
+
+See [.github/workflows/ci.yml](.github/workflows/ci.yml) for CI configuration.
+
 ## Future Enhancements
 
 - [ ] Multiple detection models (face, person, object, license plate)
@@ -132,6 +185,8 @@ src/
 - [ ] Advanced face tracking algorithms
 - [ ] Custom detection regions
 - [ ] Watermarking options
+- [ ] Video preview with blur overlay
+- [ ] Keyboard shortcuts for power users
 
 ## Contributing
 
