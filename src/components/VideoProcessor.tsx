@@ -2,7 +2,7 @@
  * Video processing component with face tracking and blur
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -20,6 +20,14 @@ import DownloadIcon from '@mui/icons-material/Download';
 import BlurOnIcon from '@mui/icons-material/BlurOn';
 import type { FaceTrack, ProcessingOptions } from '../types';
 import { videoProcessingService } from '../services/videoProcessing';
+import { handleError } from '../utils/errorHandler';
+import {
+  DEFAULT_BLUR_INTENSITY,
+  DEFAULT_DETECTION_CONFIDENCE,
+  MIN_BLUR_INTENSITY,
+  MAX_BLUR_INTENSITY,
+  FACE_BOX_SELECTED_COLOR,
+} from '../constants';
 
 interface VideoProcessorProps {
   file: File;
@@ -32,14 +40,38 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tracks, setTracks] = useState<FaceTrack[]>([]);
-  const [blurIntensity, setBlurIntensity] = useState(20);
+  const [blurIntensity, setBlurIntensity] = useState(DEFAULT_BLUR_INTENSITY);
   const [progress, setProgress] = useState(0);
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
+  const videoUrlRef = useRef<string | null>(null);
+  const processedBlobUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     loadVideo();
-  }, [file]);
+
+    // Cleanup function
+    return () => {
+      // Revoke video URL
+      if (videoUrlRef.current) {
+        URL.revokeObjectURL(videoUrlRef.current);
+        videoUrlRef.current = null;
+      }
+
+      // Revoke processed blob URL
+      if (processedBlobUrlRef.current) {
+        URL.revokeObjectURL(processedBlobUrlRef.current);
+        processedBlobUrlRef.current = null;
+      }
+
+      // Clean up video element
+      if (videoElement) {
+        videoElement.pause();
+        videoElement.src = '';
+        videoElement.load();
+      }
+    };
+  }, [file, videoElement]);
 
   const loadVideo = async () => {
     try {
@@ -51,8 +83,8 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
 
       setLoading(false);
     } catch (err) {
-      console.error('Error loading video:', err);
-      setError('Failed to load video. Please try again.');
+      const errorMessage = handleError(err);
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -66,7 +98,7 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
       setProgress(0);
 
       const options: Partial<ProcessingOptions> = {
-        detectionConfidence: 0.5,
+        detectionConfidence: DEFAULT_DETECTION_CONFIDENCE,
         useWebGPU: true,
       };
 
@@ -85,8 +117,8 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
 
       setDetecting(false);
     } catch (err) {
-      console.error('Error detecting faces:', err);
-      setError('Failed to detect faces. Please try again.');
+      const errorMessage = handleError(err);
+      setError(errorMessage);
       setDetecting(false);
     }
   };
@@ -117,8 +149,8 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
       setProcessedBlob(blob);
       setProcessing(false);
     } catch (err) {
-      console.error('Error processing video:', err);
-      setError('Failed to process video. Please try again.');
+      const errorMessage = handleError(err);
+      setError(errorMessage);
       setProcessing(false);
     }
   };
@@ -157,18 +189,44 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
   }
 
   return (
-    <Box>
+    <Box role="region" aria-label="Video processing interface">
       <Typography variant="h5" gutterBottom>
         Video Processing
       </Typography>
 
+      {/* Live region for processing status */}
+      <Box
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        sx={{
+          position: 'absolute',
+          left: '-10000px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+        }}
+      >
+        {detecting && `Detecting faces in video, ${Math.round(progress)}% complete`}
+        {processing && `Processing video with blur, ${Math.round(progress)}% complete`}
+        {processedBlob && !processing && 'Video processing complete, ready to export'}
+      </Box>
+
       {videoElement && (
         <Paper sx={{ p: 2, mb: 2 }}>
           <video
-            src={URL.createObjectURL(file)}
+            src={(() => {
+              if (!videoUrlRef.current) {
+                videoUrlRef.current = URL.createObjectURL(file);
+              }
+              return videoUrlRef.current;
+            })()}
             controls
             style={{ maxWidth: '100%', height: 'auto' }}
-          />
+            aria-label="Video preview player"
+          >
+            <track kind="captions" />
+          </video>
         </Paper>
       )}
 
@@ -182,6 +240,7 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
             onClick={handleDetectFaces}
             disabled={detecting}
             fullWidth
+            aria-label="Start detecting faces in video"
           >
             Detect Faces
           </Button>
@@ -189,9 +248,16 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
       )}
 
       {detecting && (
-        <Paper sx={{ p: 2, mb: 2 }}>
+        <Paper sx={{ p: 2, mb: 2 }} role="status" aria-label="Face detection progress">
           <Typography gutterBottom>Detecting faces in video...</Typography>
-          <LinearProgress variant="determinate" value={progress} />
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            aria-label="Detection progress"
+            aria-valuenow={Math.round(progress)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
           <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
             {Math.round(progress)}% complete
           </Typography>
@@ -207,27 +273,35 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
             <Typography variant="body2" color="text.secondary" gutterBottom>
               Each track represents a unique face found in the video. Select the faces you want to blur.
             </Typography>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mt: 1 }}>
-              {tracks.map((track) => (
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2, mt: 1 }} role="list" aria-label="Detected face tracks">
+              {tracks.map((track, index) => (
                 <Card
                   key={track.id}
                   sx={{
                     cursor: 'pointer',
-                    border: track.selected ? '2px solid #00ff00' : '2px solid transparent',
+                    border: track.selected ? `2px solid ${FACE_BOX_SELECTED_COLOR}` : '2px solid transparent',
                   }}
                   onClick={() => handleTrackToggle(track.id)}
+                  role="listitem"
                 >
                   {track.thumbnail && (
                     <img
                       src={track.thumbnail}
-                      alt="Face Track"
+                      alt={`Face track ${index + 1}, appears in ${track.faces.length} frames`}
                       style={{ width: '100%', height: 'auto' }}
                     />
                   )}
                   <CardContent sx={{ p: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Checkbox checked={track.selected} size="small" />
-                      <Typography variant="caption">
+                      <Checkbox
+                        checked={track.selected}
+                        size="small"
+                        aria-label={`Face track ${index + 1}, appears in ${track.faces.length} frames, ${track.selected ? 'selected' : 'not selected'}`}
+                        inputProps={{
+                          'aria-describedby': `track-${track.id}-label`,
+                        }}
+                      />
+                      <Typography variant="caption" id={`track-${track.id}-label`}>
                         {track.faces.length} frames
                       </Typography>
                     </Box>
@@ -238,13 +312,20 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
           </Paper>
 
           <Paper sx={{ p: 2, mb: 2 }}>
-            <Typography gutterBottom>Blur Intensity: {blurIntensity}</Typography>
+            <Typography id="video-blur-intensity-label" gutterBottom>
+              Blur Intensity: {blurIntensity}
+            </Typography>
             <Slider
               value={blurIntensity}
               onChange={(_, value) => setBlurIntensity(value as number)}
-              min={5}
-              max={50}
+              min={MIN_BLUR_INTENSITY}
+              max={MAX_BLUR_INTENSITY}
               disabled={processing}
+              aria-labelledby="video-blur-intensity-label"
+              aria-valuemin={MIN_BLUR_INTENSITY}
+              aria-valuemax={MAX_BLUR_INTENSITY}
+              aria-valuenow={blurIntensity}
+              aria-valuetext={`Blur intensity ${blurIntensity}`}
             />
           </Paper>
 
@@ -254,6 +335,7 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
               startIcon={<BlurOnIcon />}
               onClick={handleProcessVideo}
               disabled={processing || tracks.filter((t) => t.selected).length === 0}
+              aria-label={processing ? 'Processing video' : 'Process video with blur on selected faces'}
             >
               Process Video
             </Button>
@@ -262,18 +344,26 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
               startIcon={<DownloadIcon />}
               onClick={handleExport}
               disabled={!processedBlob}
+              aria-label="Download processed video"
             >
               Export Video
             </Button>
-            <Button variant="outlined" onClick={onBack}>
+            <Button variant="outlined" onClick={onBack} aria-label="Go back to file upload">
               Back
             </Button>
           </Box>
 
           {processing && (
-            <Paper sx={{ p: 2, mb: 2 }}>
+            <Paper sx={{ p: 2, mb: 2 }} role="status" aria-label="Video processing progress">
               <Typography gutterBottom>Processing video with blur...</Typography>
-              <LinearProgress variant="determinate" value={progress} />
+              <LinearProgress
+                variant="determinate"
+                value={progress}
+                aria-label="Processing progress"
+                aria-valuenow={Math.round(progress)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+              />
               <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
                 {Math.round(progress)}% complete
               </Typography>

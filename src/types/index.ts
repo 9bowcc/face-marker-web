@@ -19,6 +19,14 @@ export interface BoundingBox {
   height: number;
 }
 
+/**
+ * Extended box type from MediaPipe that includes probability score
+ * This extends the base Box type from @tensorflow-models/face-detection
+ */
+export interface MediaPipeBox extends BoundingBox {
+  probability?: number;
+}
+
 export interface Keypoint {
   x: number;
   y: number;
