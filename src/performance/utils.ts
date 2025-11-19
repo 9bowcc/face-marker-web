@@ -31,7 +31,7 @@ export interface PerformanceReport {
   };
   benchmarks: BenchmarkResult[];
   memorySnapshots?: MemorySnapshot[];
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -57,8 +57,15 @@ export class MemoryMonitor {
   }
 
   takeSnapshot(): MemorySnapshot | null {
-    if ('memory' in performance && (performance as any).memory) {
-      const mem = (performance as any).memory;
+    interface PerformanceWithMemory extends Performance {
+      memory?: {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+      };
+    }
+    if ('memory' in performance && (performance as PerformanceWithMemory).memory) {
+      const mem = (performance as PerformanceWithMemory).memory!;
       const snapshot: MemorySnapshot = {
         usedJSHeapSize: mem.usedJSHeapSize,
         totalJSHeapSize: mem.totalJSHeapSize,
@@ -264,14 +271,17 @@ Margin:   ±${result.marginOfError.toFixed(2)} ms (${result.relativeMarginOfErro
 export function generatePerformanceReport(
   benchmarks: BenchmarkResult[],
   memorySnapshots?: MemorySnapshot[],
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ): PerformanceReport {
+  interface NavigatorWithMemory extends Navigator {
+    deviceMemory?: number;
+  }
   return {
     timestamp: new Date().toISOString(),
     platform: {
       userAgent: navigator.userAgent,
       hardwareConcurrency: navigator.hardwareConcurrency,
-      deviceMemory: (navigator as any).deviceMemory,
+      deviceMemory: (navigator as NavigatorWithMemory).deviceMemory,
     },
     benchmarks,
     memorySnapshots,

@@ -2,7 +2,7 @@
  * Video processing component with face tracking and blur
  */
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Box,
   Button,
@@ -44,11 +44,37 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
   const [progress, setProgress] = useState(0);
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(null);
   const [processedBlob, setProcessedBlob] = useState<Blob | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoUrlRef = useRef<string | null>(null);
   const processedBlobUrlRef = useRef<string | null>(null);
 
+  const loadVideo = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { video } = await videoProcessingService.loadVideo(file);
+      setVideoElement(video);
+
+      // Create object URL for video preview
+      if (!videoUrlRef.current) {
+        const url = URL.createObjectURL(file);
+        videoUrlRef.current = url;
+        setVideoUrl(url);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      const errorMessage = handleError(err);
+      setError(errorMessage);
+      setLoading(false);
+    }
+  }, [file]);
+
   useEffect(() => {
-    loadVideo();
+    // Load video on mount - legitimate use of setState in effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadVideo();
 
     // Cleanup function
     return () => {
@@ -63,31 +89,8 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
         URL.revokeObjectURL(processedBlobUrlRef.current);
         processedBlobUrlRef.current = null;
       }
-
-      // Clean up video element
-      if (videoElement) {
-        videoElement.pause();
-        videoElement.src = '';
-        videoElement.load();
-      }
     };
-  }, [file, videoElement]);
-
-  const loadVideo = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const { video } = await videoProcessingService.loadVideo(file);
-      setVideoElement(video);
-
-      setLoading(false);
-    } catch (err) {
-      const errorMessage = handleError(err);
-      setError(errorMessage);
-      setLoading(false);
-    }
-  };
+  }, [loadVideo]);
 
   const handleDetectFaces = async () => {
     if (!videoElement) return;
@@ -212,15 +215,10 @@ export const VideoProcessor: React.FC<VideoProcessorProps> = ({ file, onBack }) 
         {processedBlob && !processing && 'Video processing complete, ready to export'}
       </Box>
 
-      {videoElement && (
+      {videoElement && videoUrl && (
         <Paper sx={{ p: 2, mb: 2 }}>
           <video
-            src={(() => {
-              if (!videoUrlRef.current) {
-                videoUrlRef.current = URL.createObjectURL(file);
-              }
-              return videoUrlRef.current;
-            })()}
+            src={videoUrl}
             controls
             style={{ maxWidth: '100%', height: 'auto' }}
             aria-label="Video preview player"

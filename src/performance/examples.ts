@@ -32,7 +32,6 @@ import {
 import {
   compareBackends,
   compareBackendsAcrossSizes,
-  benchmarkInitializationTimes,
 } from './backendComparison';
 
 import {
@@ -388,7 +387,10 @@ export async function runAllExamples() {
 
 // Attach to window for browser console access
 if (typeof window !== 'undefined') {
-  (window as any).performanceExamples = {
+  interface WindowWithExamples extends Window {
+    performanceExamples: Record<string, unknown>;
+  }
+  (window as unknown as WindowWithExamples).performanceExamples = {
     example1_RunAllTests,
     example2_RunQuickTests,
     example3_RunSpecificCategory,

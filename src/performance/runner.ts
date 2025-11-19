@@ -77,8 +77,17 @@ export async function runPerformanceTests(): Promise<void> {
 // Auto-run if this is the main module
 if (typeof window !== 'undefined') {
   // Browser environment - attach to window for manual execution
-  (window as any).runPerformanceTests = runPerformanceTests;
-  (window as any).performanceTestSuite = {
+  interface WindowWithPerformance extends Window {
+    runPerformanceTests: () => Promise<void>;
+    performanceTestSuite: {
+      runAll: typeof runAllPerformanceTests;
+      runQuick: typeof runQuickPerformanceTests;
+      runSpecific: typeof runSpecificTest;
+    };
+  }
+  const extendedWindow = window as unknown as WindowWithPerformance;
+  extendedWindow.runPerformanceTests = runPerformanceTests;
+  extendedWindow.performanceTestSuite = {
     runAll: runAllPerformanceTests,
     runQuick: runQuickPerformanceTests,
     runSpecific: runSpecificTest,

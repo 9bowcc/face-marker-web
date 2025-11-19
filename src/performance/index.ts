@@ -5,7 +5,6 @@
 
 import {
   runFaceDetectionBenchmarks,
-  benchmarkMaxFacesImpact,
   generateSummaryReport as generateFaceDetectionSummary,
   validateBenchmarkResults,
   type FaceDetectionBenchmarkResult,
@@ -14,7 +13,6 @@ import {
 import {
   runBlurRegionSizeBenchmarks,
   runBlurIntensityBenchmarks,
-  benchmarkMultipleFaces,
   generateBlurSummary,
   validateBlurBenchmarks,
   type BlurBenchmarkResult,
@@ -22,8 +20,6 @@ import {
 
 import {
   runVideoProcessingBenchmarks,
-  benchmarkSustainedProcessing,
-  benchmarkSampleRates,
   generateVideoSummary,
   validateVideoBenchmarks,
   type VideoBenchmarkResult,
@@ -39,6 +35,7 @@ import {
   generatePerformanceReport,
   exportReportAsJSON,
   type PerformanceReport,
+  type BenchmarkResult,
 } from './utils';
 
 export interface PerformanceTestSuiteOptions {
@@ -101,7 +98,7 @@ export async function runAllPerformanceTests(
     timestamp: new Date().toISOString(),
   };
 
-  const allBenchmarks: any[] = [];
+  const allBenchmarks: BenchmarkResult[] = [];
 
   // Face Detection Benchmarks
   if (runFaceDetection) {
@@ -264,7 +261,7 @@ export async function runQuickPerformanceTests(): Promise<PerformanceTestSuiteRe
  */
 export async function runSpecificTest(
   category: 'face-detection' | 'blur' | 'video' | 'backend-comparison'
-): Promise<any> {
+): Promise<PerformanceTestSuiteResults> {
   const options: PerformanceTestSuiteOptions = {
     runFaceDetection: category === 'face-detection',
     runBlur: category === 'blur',

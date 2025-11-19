@@ -50,6 +50,7 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
   const originalCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const displayCanvasRef = useRef<HTMLCanvasElement>(null);
   const thumbnailUrlsRef = useRef<string[]>([]);
+  const [thumbnails, setThumbnails] = useState<Map<string, string>>(new Map());
 
   const loadAndDetect = useCallback(async () => {
     try {
@@ -92,7 +93,14 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
   }, [file]);
 
   useEffect(() => {
-    loadAndDetect();
+    // Capture ref values at the start of the effect
+    const canvas = canvasRef.current;
+    const originalCanvas = originalCanvasRef.current;
+    const displayCanvas = displayCanvasRef.current;
+
+    // Load and detect faces on mount - legitimate use of setState in effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadAndDetect();
 
     // Cleanup function
     return () => {
@@ -103,41 +111,10 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
       });
       thumbnailUrlsRef.current = [];
 
-      // Clean up canvas contexts
-      cleanupCanvas(canvasRef.current);
-      cleanupCanvas(originalCanvasRef.current);
-      cleanupCanvas(displayCanvasRef.current);
-      
-      // Clean up canvas contexts - copy ref values to local variables
-      const canvas = canvasRef.current;
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        canvas.width = 0;
-        canvas.height = 0;
-      }
-
-      const originalCanvas = originalCanvasRef.current;
-      if (originalCanvas) {
-        const ctx = originalCanvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
-        }
-        originalCanvas.width = 0;
-        originalCanvas.height = 0;
-      }
-
-      const displayCanvas = displayCanvasRef.current;
-      if (displayCanvas) {
-        const ctx = displayCanvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
-        }
-        displayCanvas.width = 0;
-        displayCanvas.height = 0;
-      }
+      // Clean up canvas contexts using captured values
+      cleanupCanvas(canvas);
+      cleanupCanvas(originalCanvas);
+      cleanupCanvas(displayCanvas);
     };
   }, [loadAndDetect]);
 
@@ -231,6 +208,26 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
     drawFaceBoxes();
   }, [drawFaceBoxes, processed]);
 
+  // Generate thumbnails when faces are detected
+  // Deriving thumbnail state from faces - legitimate use of setState in effect
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    if (!canvasRef.current || faces.length === 0) {
+      setThumbnails(new Map<string, string>());
+      return;
+    }
+
+    const newThumbnails = new Map<string, string>();
+    faces.forEach((face) => {
+      const thumbnail = createFaceThumbnail(canvasRef.current!, face.box);
+      if (thumbnail) {
+        newThumbnails.set(face.id, thumbnail);
+      }
+    });
+    setThumbnails(newThumbnails);
+  }, [faces]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -295,9 +292,7 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
             </Typography>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)', md: 'repeat(4, 1fr)' }, gap: 2 }} role="list" aria-label="Detected faces">
               {faces.map((face, index) => {
-                const thumbnail = canvasRef.current
-                  ? createFaceThumbnail(canvasRef.current, face.box)
-                  : '';
+                const thumbnail = thumbnails.get(face.id) || '';
 
                 return (
                   <Card

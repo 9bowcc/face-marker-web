@@ -91,7 +91,7 @@ export async function runFaceDetectionBenchmarks(
       iterations
     );
 
-    const memorySnapshots = memoryMonitor.stop();
+    memoryMonitor.stop();
     const memoryStats = memoryMonitor.getMemoryStats();
 
     // Clean up

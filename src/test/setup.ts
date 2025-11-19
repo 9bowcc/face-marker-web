@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, afterEach, vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Cleanup after each test case
@@ -44,7 +44,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   strokeRect: vi.fn(),
   strokeText: vi.fn(),
   fillText: vi.fn(),
-})) as any;
+})) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 
 HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,mock');
 HTMLCanvasElement.prototype.toBlob = vi.fn((callback) => {
@@ -57,10 +57,10 @@ global.URL.revokeObjectURL = vi.fn();
 
 // Mock MediaRecorder
 global.MediaRecorder = class MediaRecorder {
-  state = 'inactive';
-  ondataavailable = null;
-  onstop = null;
-  onerror = null;
+  state: RecordingState = 'inactive';
+  ondataavailable: ((event: BlobEvent) => void) | null = null;
+  onstop: ((event: Event) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
 
   constructor() {}
 
@@ -78,7 +78,11 @@ global.MediaRecorder = class MediaRecorder {
   pause() {}
   resume() {}
   requestData() {}
-} as any;
+
+  addEventListener() {}
+  removeEventListener() {}
+  dispatchEvent(): boolean { return true; }
+} as unknown as typeof MediaRecorder;
 
 // Mock captureStream
 HTMLCanvasElement.prototype.captureStream = vi.fn(() => ({
@@ -89,4 +93,4 @@ HTMLCanvasElement.prototype.captureStream = vi.fn(() => ({
   removeTrack: vi.fn(),
   active: true,
   id: 'mock-stream',
-})) as any;
+})) as unknown as typeof HTMLCanvasElement.prototype.captureStream;

@@ -29,7 +29,7 @@ describe('VideoProcessor', () => {
     pause: vi.fn(),
     load: vi.fn(),
     play: vi.fn(),
-  } as any;
+  } as unknown as HTMLVideoElement;
 
   const mockTracks: FaceTrack[] = [
     {

@@ -2,7 +2,7 @@
  * Main application component
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ThemeProvider,
   createTheme,
@@ -43,27 +43,27 @@ function App() {
   const [initError, setInitError] = useState<string | null>(null);
   const [backendInfo, setBackendInfo] = useState<string>('');
 
-  const initializeFaceDetection = useCallback(async () => {
-    try {
-      setInitializing(true);
-      const service = getFaceDetectionService();
-      await service.initialize({ useWebGPU: true });
-
-      const backend = service.getBackend();
-      const webgpu = service.isWebGPUEnabled();
-      setBackendInfo(`Backend: ${backend.toUpperCase()}${webgpu ? ' (GPU Accelerated)' : ''}`);
-
-      setInitializing(false);
-    } catch (error) {
-      console.error('Failed to initialize:', error);
-      setInitError('Failed to initialize face detection. Please refresh the page.');
-      setInitializing(false);
-    }
-  }, []);
-
   useEffect(() => {
+    const initializeFaceDetection = async () => {
+      try {
+        setInitializing(true);
+        const service = getFaceDetectionService();
+        await service.initialize({ useWebGPU: true });
+
+        const backend = service.getBackend();
+        const webgpu = service.isWebGPUEnabled();
+        setBackendInfo(`Backend: ${backend.toUpperCase()}${webgpu ? ' (GPU Accelerated)' : ''}`);
+
+        setInitializing(false);
+      } catch (error) {
+        console.error('Failed to initialize:', error);
+        setInitError('Failed to initialize face detection. Please refresh the page.');
+        setInitializing(false);
+      }
+    };
+
     initializeFaceDetection();
-  }, [initializeFaceDetection]);
+  }, []);
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file);
