@@ -6,6 +6,7 @@ import type { FaceDetection, FaceTrack, ProcessingOptions, MediaFile, BoundingBo
 import { getFaceDetectionService } from './faceDetection';
 import { applyBlurToRegions, createFaceThumbnail } from '../utils/blur';
 import { VideoProcessingError } from '../utils/errorHandler';
+import { cleanupCanvas } from '../utils/canvas';
 import {
   FRAME_RATE,
   SAMPLE_RATE,
@@ -145,9 +146,7 @@ export class VideoProcessingService {
       return tracks;
     } finally {
       // Clean up canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.width = 0;
-      canvas.height = 0;
+      cleanupCanvas(canvas);
     }
   }
 
@@ -378,9 +377,7 @@ export class VideoProcessingService {
       return blob;
     } finally {
       // Clean up canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      canvas.width = 0;
-      canvas.height = 0;
+      cleanupCanvas(canvas);
     }
   }
 

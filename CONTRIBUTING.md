@@ -111,9 +111,8 @@ describe('ComponentName', () => {
 1. **Update documentation**: If you change functionality, update relevant docs
 2. **Add tests**: Ensure your changes are covered by tests
 3. **Run all checks**: Make sure tests pass and code is linted
-4. **Update CHANGELOG**: Add a note about your changes
-5. **Create pull request**: Provide a clear description of changes
-6. **Wait for review**: A maintainer will review your PR
+4. **Create pull request**: Provide a clear description of changes
+5. **Wait for review**: A maintainer will review your PR
 
 ### Pull Request Description Template
 
@@ -137,7 +136,6 @@ Add screenshots for UI changes
 - [ ] Tests pass locally
 - [ ] Code is linted
 - [ ] Documentation updated
-- [ ] CHANGELOG updated
 ```
 
 ## Areas for Contribution

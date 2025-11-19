@@ -21,6 +21,7 @@ import type { FaceDetection, ProcessingOptions } from '../types';
 import { imageProcessingService } from '../services/imageProcessing';
 import { createFaceThumbnail } from '../utils/blur';
 import { handleError } from '../utils/errorHandler';
+import { cleanupCanvas } from '../utils/canvas';
 import {
   DEFAULT_BLUR_INTENSITY,
   DEFAULT_DETECTION_CONFIDENCE,
@@ -111,32 +112,9 @@ export const ImageProcessor: React.FC<ImageProcessorProps> = ({ file, onBack }) 
       thumbnailUrlsRef.current = [];
 
       // Clean up canvas contexts using captured values
-      if (canvas) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        canvas.width = 0;
-        canvas.height = 0;
-      }
-
-      if (originalCanvas) {
-        const ctx = originalCanvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, originalCanvas.width, originalCanvas.height);
-        }
-        originalCanvas.width = 0;
-        originalCanvas.height = 0;
-      }
-
-      if (displayCanvas) {
-        const ctx = displayCanvas.getContext('2d');
-        if (ctx) {
-          ctx.clearRect(0, 0, displayCanvas.width, displayCanvas.height);
-        }
-        displayCanvas.width = 0;
-        displayCanvas.height = 0;
-      }
+      cleanupCanvas(canvas);
+      cleanupCanvas(originalCanvas);
+      cleanupCanvas(displayCanvas);
     };
   }, [loadAndDetect]);
 
