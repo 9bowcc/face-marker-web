@@ -481,18 +481,19 @@ describe('VideoProcessingService', () => {
       });
 
       // Mock MediaRecorder
-      global.MediaRecorder = vi.fn().mockImplementation(() => ({
-        start: vi.fn(),
-        stop: vi.fn(function(this: MediaRecorder) {
+      global.MediaRecorder = vi.fn(function(this: any) {
+        this.start = vi.fn();
+        this.stop = vi.fn(function(this: any) {
           // Trigger onstop callback
           if (this.onstop) {
             setTimeout(() => this.onstop!(new Event('stop')), 0);
           }
-        }),
-        ondataavailable: null,
-        onstop: null,
-        state: 'inactive',
-      })) as unknown as typeof MediaRecorder;
+        });
+        this.ondataavailable = null;
+        this.onstop = null;
+        this.state = 'inactive';
+        return this;
+      }) as unknown as typeof MediaRecorder;
     });
 
     it('should process video with blur successfully', async () => {
