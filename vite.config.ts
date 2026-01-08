@@ -18,7 +18,8 @@ export default defineConfig({
   },
   server: {
     port: 61109,
-    host: true // Allow external connections
+    host: true,  // Allow external connections
+    allowedHosts: ['dev.9bow.io', 'localhost']
   },
   preview: {
     port: 61109,
