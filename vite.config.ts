@@ -17,6 +17,11 @@ export default defineConfig({
     }
   },
   server: {
-    port: 61109
+    port: 61109,
+    host: true // Allow external connections
+  },
+  preview: {
+    port: 61109,
+    host: true // Allow external connections
   }
 })
