@@ -6,8 +6,8 @@ let detector: FaceDetector | null = null;
 let isInitialized = false;
 
 const DEFAULT_OPTIONS: DetectionOptions = {
-  minConfidence: 0.5,
-  maxFaces: 20,
+  minConfidence: 0.3,
+  maxFaces: 50,
 };
 
 export async function initializeMediaPipe(): Promise<void> {

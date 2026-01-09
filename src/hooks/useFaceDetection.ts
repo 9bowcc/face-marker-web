@@ -3,7 +3,6 @@ import { DetectedFace, DetectionOptions } from '../types';
 import {
   initializeDetector,
   detectFaces as detectFacesService,
-  isDetectorReady,
   getCurrentDetectorType,
   switchDetector as switchDetectorService,
 } from '../services/detectorFactory';
@@ -99,7 +98,7 @@ export function useFaceDetection(
     isDetecting,
     error,
     activeDetector,
-    isReady: isReady && isDetectorReady(),
+    isReady,
     switchDetector,
   };
 }

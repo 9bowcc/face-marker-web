@@ -67,22 +67,33 @@ function App() {
 
         const newMediaFile = await fileToMediaFile(file);
         setMediaFile(newMediaFile);
-
-        if (newMediaFile.type === 'video') {
-          setFaces([]);
-        } else {
-          if (canvasRef.current) {
-            const img = await loadImage(file, canvasRef.current);
-            const detectedFaces = await detectFaces(img);
-            setFaces(detectedFaces);
-          }
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to process file');
       }
     },
-    [mediaFile, loadImage, detectFaces]
+    [mediaFile]
   );
+
+  useEffect(() => {
+    if (!mediaFile || mediaFile.type === 'video' || !canvasRef.current) {
+      return;
+    }
+
+    const runDetection = async () => {
+      try {
+        const response = await fetch(mediaFile.blobUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'image', { type: mediaFile.mimeType });
+        const img = await loadImage(file, canvasRef.current!);
+        const detectedFaces = await detectFaces(img);
+        setFaces(detectedFaces);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to detect faces');
+      }
+    };
+
+    runDetection();
+  }, [mediaFile, loadImage, detectFaces]);
 
   const handleFaceClick = useCallback((faceId: string) => {
     setFaces((prev) =>
