@@ -9,8 +9,8 @@ export function applyBlur(
 
   const clampedIntensity = Math.max(1, Math.min(100, intensity));
 
-  const BLUR_SCALE = 2.5;
-  const blurPx = Math.round(Math.pow(clampedIntensity / 100, 1.5) * 100 * BLUR_SCALE);
+  const MAX_BLUR_PX = 120;
+  const blurPx = Math.min(MAX_BLUR_PX, Math.round((clampedIntensity / 100) * MAX_BLUR_PX));
 
   ctx.save();
 
@@ -29,14 +29,14 @@ export function applyBlur(
   ctx.filter = `blur(${blurPx}px)`;
   ctx.drawImage(
     ctx.canvas,
-    x - blurPx,
-    y - blurPx,
-    width + blurPx * 2,
-    height + blurPx * 2,
-    x - blurPx,
-    y - blurPx,
-    width + blurPx * 2,
-    height + blurPx * 2
+    x - blurPx / 2,
+    y - blurPx / 2,
+    width + blurPx,
+    height + blurPx,
+    x - blurPx / 2,
+    y - blurPx / 2,
+    width + blurPx,
+    height + blurPx
   );
 
   ctx.restore();

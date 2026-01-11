@@ -47,9 +47,9 @@ All image and video processing happens entirely in your browser using WebGPU acc
 
 ### Detection Sensitivity
 
-- **Low (Strict)**: Only high-confidence faces (50%+) are detected
+- **Low (Strict)**: Only high-confidence faces (90%+) are detected
 - **Medium (Default)**: Balanced detection (75%+) for most scenarios
-- **High (Permissive)**: Maximum face detection (90%+) catches more faces
+- **High (Permissive)**: Maximum face detection (50%+) catches more faces
 
 ## Development
 

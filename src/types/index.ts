@@ -59,15 +59,15 @@ export interface DetectionOptions {
 export type SensitivityLevel = 'low' | 'medium' | 'high';
 
 export const SENSITIVITY_CONFIG: Record<SensitivityLevel, number> = {
-  low: 0.5,
+  low: 0.1,
   medium: 0.25,
-  high: 0.1,
+  high: 0.5,
 };
 
 export const SENSITIVITY_LABELS: Record<SensitivityLevel, string> = {
-  low: 'Low (Strict - 50%+)',
+  low: 'Low (Strict - 90%+)',
   medium: 'Medium - 75%+',
-  high: 'High (Permissive - 90%+)',
+  high: 'High (Permissive - 50%+)',
 };
 
 export const EMOJI_PRESETS = [
@@ -78,7 +78,7 @@ export const EMOJI_PRESETS = [
 
 export const DEFAULT_MASK_CONFIG: MaskConfiguration = {
   type: 'blur',
-  blurIntensity: 50,
+  blurIntensity: 20,
   emoji: '😊',
 };
 
