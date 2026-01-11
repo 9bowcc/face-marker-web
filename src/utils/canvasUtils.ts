@@ -6,13 +6,15 @@ export function applyBlur(
   intensity: number
 ): void {
   const { x, y, width, height } = region;
-  
+
   const clampedIntensity = Math.max(1, Math.min(100, intensity));
-  const INTENSITY_TO_PIXEL_SCALE = 0.5;
-  const blurPx = Math.round(clampedIntensity * INTENSITY_TO_PIXEL_SCALE);
-  
+
+  // 강력한 blur 적용
+  const BLUR_SCALE = 2.5;
+  const blurPx = Math.round(Math.pow(clampedIntensity / 100, 1.5) * 100 * BLUR_SCALE);
+
   ctx.save();
-  
+
   ctx.beginPath();
   ctx.ellipse(
     x + width / 2,
@@ -24,9 +26,9 @@ export function applyBlur(
     Math.PI * 2
   );
   ctx.clip();
-  
+
+  // Step 1: 강력한 blur 적용
   ctx.filter = `blur(${blurPx}px)`;
-  
   ctx.drawImage(
     ctx.canvas,
     x - blurPx,
@@ -38,7 +40,52 @@ export function applyBlur(
     width + blurPx * 2,
     height + blurPx * 2
   );
-  
+
+  // Step 2: 픽셀화 (pixelation) 적용 - blur 효과와 결합
+  // blur보다 더 작은 픽셀 블록으로 모자이크와 차별화
+  const faceSize = Math.min(width, height);
+  const PIXEL_BLOCK_SIZE = Math.max(3, Math.floor(faceSize / 16));
+
+  // 임시 캔버스로 픽셀화 적용
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  if (!tempCtx) {
+    ctx.restore();
+    return;
+  }
+
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+
+  // 작은 크기로 다운샘플링
+  tempCtx.drawImage(
+    ctx.canvas,
+    x,
+    y,
+    width,
+    height,
+    0,
+    0,
+    PIXEL_BLOCK_SIZE,
+    PIXEL_BLOCK_SIZE
+  );
+
+  // 원래 크기로 업샘플링 (픽셀화 효과)
+  ctx.filter = 'none';
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(
+    tempCanvas,
+    0,
+    0,
+    PIXEL_BLOCK_SIZE,
+    PIXEL_BLOCK_SIZE,
+    x,
+    y,
+    width,
+    height
+  );
+  ctx.imageSmoothingEnabled = true;
+
   ctx.restore();
 }
 
@@ -134,6 +181,80 @@ export function downloadBlob(blob: Blob, filename: string): void {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+export function applyMosaic(
+  ctx: CanvasRenderingContext2D,
+  region: BoundingBox,
+  intensity: number
+): void {
+  const { x, y, width, height } = region;
+
+  const clampedIntensity = Math.max(1, Math.min(100, intensity));
+
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.ellipse(
+    x + width / 2,
+    y + height / 2,
+    width / 2,
+    height / 2,
+    0,
+    0,
+    Math.PI * 2
+  );
+  ctx.clip();
+
+  // 픽셀 블록 크기 계산 (intensity에 비례)
+  const faceSize = Math.min(width, height);
+  const BASE_BLOCK_SIZE = Math.floor(faceSize / 10);
+  const INTENSITY_MULTIPLIER = clampedIntensity / 50;
+  const blockSize = Math.max(2, Math.floor(BASE_BLOCK_SIZE * INTENSITY_MULTIPLIER));
+
+  // 임시 캔버스로 픽셀화 적용
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d');
+  if (!tempCtx) {
+    ctx.restore();
+    return;
+  }
+
+  tempCanvas.width = width;
+  tempCanvas.height = height;
+
+  // 작은 크기로 다운샘플링
+  const smallWidth = Math.max(1, Math.floor(width / blockSize));
+  const smallHeight = Math.max(1, Math.floor(height / blockSize));
+
+  tempCtx.drawImage(
+    ctx.canvas,
+    x,
+    y,
+    width,
+    height,
+    0,
+    0,
+    smallWidth,
+    smallHeight
+  );
+
+  // 원래 크기로 업샘플링 (픽셀화 효과)
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(
+    tempCanvas,
+    0,
+    0,
+    smallWidth,
+    smallHeight,
+    x,
+    y,
+    width,
+    height
+  );
+  ctx.imageSmoothingEnabled = true;
+
+  ctx.restore();
 }
 
 export function clearCanvas(canvas: HTMLCanvasElement): void {

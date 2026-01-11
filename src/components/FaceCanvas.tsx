@@ -2,7 +2,7 @@ import { useEffect, useRef, RefObject, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { DetectedFace, MaskConfiguration } from '../types';
 import { loadImageToCanvas } from '../utils/imageUtils';
-import { drawBoundingBox, applyBlur, applyEmoji } from '../utils/canvasUtils';
+import { drawBoundingBox, applyBlur, applyMosaic, applyEmoji } from '../utils/canvasUtils';
 
 interface FaceCanvasProps {
   imageSrc: string | null;
@@ -46,7 +46,7 @@ export function FaceCanvas({
     displayCtx.drawImage(canvas, 0, 0);
 
     const selectedFaces = faces.filter((f) => f.isSelected);
-    
+
     if (maskConfig.type !== 'none') {
       for (const face of selectedFaces) {
         const region = {
@@ -58,6 +58,8 @@ export function FaceCanvas({
 
         if (maskConfig.type === 'blur') {
           applyBlur(displayCtx, region, maskConfig.blurIntensity);
+        } else if (maskConfig.type === 'mosaic') {
+          applyMosaic(displayCtx, region, maskConfig.blurIntensity);
         } else if (maskConfig.type === 'emoji') {
           applyEmoji(displayCtx, region, maskConfig.emoji);
         }

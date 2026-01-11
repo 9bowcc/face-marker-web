@@ -3,7 +3,7 @@ import { MaskConfiguration, DEFAULT_MASK_CONFIG, EMOJI_PRESETS } from '../types'
 
 interface UseMaskConfigurationResult {
   config: MaskConfiguration;
-  setMaskType: (type: 'blur' | 'emoji' | 'none') => void;
+  setMaskType: (type: 'blur' | 'mosaic' | 'emoji' | 'none') => void;
   setBlurIntensity: (intensity: number) => void;
   setEmoji: (emoji: string) => void;
   reset: () => void;
@@ -12,7 +12,7 @@ interface UseMaskConfigurationResult {
 export function useMaskConfiguration(): UseMaskConfigurationResult {
   const [config, setConfig] = useState<MaskConfiguration>(DEFAULT_MASK_CONFIG);
 
-  const setMaskType = useCallback((type: 'blur' | 'emoji' | 'none') => {
+  const setMaskType = useCallback((type: 'blur' | 'mosaic' | 'emoji' | 'none') => {
     setConfig((prev) => ({ ...prev, type }));
   }, []);
 

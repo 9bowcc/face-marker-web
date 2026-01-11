@@ -23,7 +23,7 @@ export interface DetectedFace {
 }
 
 export interface MaskConfiguration {
-  type: 'blur' | 'emoji' | 'none';
+  type: 'blur' | 'mosaic' | 'emoji' | 'none';
   blurIntensity: number;
   emoji: string;
 }
@@ -79,7 +79,7 @@ export const EMOJI_PRESETS = [
 export const DEFAULT_MASK_CONFIG: MaskConfiguration = {
   type: 'blur',
   blurIntensity: 50,
-  emoji: '😊'
+  emoji: '😊',
 };
 
 export const DEFAULT_EXPORT_OPTIONS: ExportOptions = {

@@ -1,5 +1,5 @@
 import { DetectedFace, MaskConfiguration } from '../types';
-import { applyBlur, applyEmoji } from './canvasUtils';
+import { applyBlur, applyMosaic, applyEmoji } from './canvasUtils';
 
 export async function processVideoFrame(
   video: HTMLVideoElement,
@@ -23,6 +23,8 @@ export async function processVideoFrame(
 
     if (config.type === 'blur') {
       applyBlur(ctx, region, config.blurIntensity);
+    } else if (config.type === 'mosaic') {
+      applyMosaic(ctx, region, config.blurIntensity);
     } else if (config.type === 'emoji') {
       applyEmoji(ctx, region, config.emoji);
     }

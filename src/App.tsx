@@ -7,6 +7,7 @@ import {
   Alert,
   CircularProgress,
   Stack,
+  Chip,
 } from '@mui/material';
 import { ImageUpload } from './components/ImageUpload';
 import { FaceCanvas } from './components/FaceCanvas';
@@ -15,10 +16,13 @@ import { MaskControls } from './components/MaskControls';
 import { ModelSelector } from './components/ModelSelector';
 import { DownloadButton } from './components/DownloadButton';
 import { FaceList } from './components/FaceList';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import MemoryIcon from '@mui/icons-material/Memory';
 import { SensitivitySelector } from './components/SensitivitySelector';
 import { useFaceDetection } from './hooks/useFaceDetection';
 import { useImageProcessor } from './hooks/useImageProcessor';
 import { useMaskConfiguration } from './hooks/useMaskConfiguration';
+import { useWebGPUSupport } from './hooks/useWebGPUSupport';
 import {
   DetectedFace,
   MaskConfiguration,
@@ -48,6 +52,7 @@ function App() {
 
   const { loadImage, applyMask, exportImage, isProcessing } = useImageProcessor();
   const { config, setMaskType, setBlurIntensity, setEmoji } = useMaskConfiguration();
+  const webgpuSupport = useWebGPUSupport();
 
   // Cleanup blob URL on unmount or file change
   useEffect(() => {
@@ -157,10 +162,34 @@ function App() {
       <Typography variant="h4" component="h1" gutterBottom align="center">
         Face Masker
       </Typography>
-      <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 2 }}>
         Upload an image, detect faces, and apply blur or emoji masks. All processing
         happens in your browser - no data is uploaded.
       </Typography>
+
+      <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+        {webgpuSupport.isChecking ? (
+          <Chip
+            icon={<CircularProgress size={16} />}
+            label="Checking WebGPU support..."
+            size="small"
+          />
+        ) : webgpuSupport.isSupported ? (
+          <Chip
+            icon={<CheckCircleIcon />}
+            label="WebGPU Supported (GPU Acceleration Enabled)"
+            color="success"
+            size="small"
+          />
+        ) : (
+          <Chip
+            icon={<MemoryIcon />}
+            label="WebGPU Not Available (Using CPU)"
+            color="warning"
+            size="small"
+          />
+        )}
+      </Box>
 
       {displayError && (
         <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>

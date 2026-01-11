@@ -1,5 +1,6 @@
 import { Box, Typography, Slider, ToggleButton, ToggleButtonGroup, Stack, Divider } from '@mui/material';
 import BlurOnIcon from '@mui/icons-material/BlurOn';
+import GridOnIcon from '@mui/icons-material/GridOn';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { MaskConfiguration } from '../types';
@@ -20,7 +21,7 @@ export function MaskControls({
 }: MaskControlsProps) {
   const handleTypeChange = (
     _: React.MouseEvent<HTMLElement>,
-    newType: 'blur' | 'emoji' | 'none' | null
+    newType: 'blur' | 'mosaic' | 'emoji' | 'none' | null
   ) => {
     if (newType !== null) {
       onChange({ ...config, type: newType });
@@ -67,6 +68,12 @@ export function MaskControls({
                 <span>Blur</span>
               </Stack>
             </ToggleButton>
+            <ToggleButton value="mosaic">
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <GridOnIcon fontSize="small" />
+                <span>Mosaic</span>
+              </Stack>
+            </ToggleButton>
             <ToggleButton value="emoji">
               <Stack direction="row" spacing={0.5} alignItems="center">
                 <EmojiEmotionsIcon fontSize="small" />
@@ -88,6 +95,23 @@ export function MaskControls({
           <Box>
             <Typography variant="caption" color="text.secondary">
               Blur Intensity: {config.blurIntensity}%
+            </Typography>
+            <Slider
+              value={config.blurIntensity}
+              onChange={handleBlurChange}
+              min={1}
+              max={100}
+              disabled={disabled}
+              valueLabelDisplay="auto"
+              sx={{ mt: 1 }}
+            />
+          </Box>
+        )}
+
+        {config.type === 'mosaic' && (
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Mosaic Intensity: {config.blurIntensity}%
             </Typography>
             <Slider
               value={config.blurIntensity}
