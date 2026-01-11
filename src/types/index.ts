@@ -60,14 +60,14 @@ export type SensitivityLevel = 'low' | 'medium' | 'high';
 
 export const SENSITIVITY_CONFIG: Record<SensitivityLevel, number> = {
   low: 0.5,
-  medium: 0.3,
+  medium: 0.25,
   high: 0.1,
 };
 
 export const SENSITIVITY_LABELS: Record<SensitivityLevel, string> = {
-  low: 'Low (Strict)',
-  medium: 'Medium',
-  high: 'High (Permissive)',
+  low: 'Low (Strict - 50%+)',
+  medium: 'Medium - 75%+',
+  high: 'High (Permissive - 90%+)',
 };
 
 export const EMOJI_PRESETS = [

@@ -9,7 +9,6 @@ export function applyBlur(
 
   const clampedIntensity = Math.max(1, Math.min(100, intensity));
 
-  // 강력한 blur 적용
   const BLUR_SCALE = 2.5;
   const blurPx = Math.round(Math.pow(clampedIntensity / 100, 1.5) * 100 * BLUR_SCALE);
 
@@ -27,7 +26,6 @@ export function applyBlur(
   );
   ctx.clip();
 
-  // Step 1: 강력한 blur 적용
   ctx.filter = `blur(${blurPx}px)`;
   ctx.drawImage(
     ctx.canvas,
@@ -40,51 +38,6 @@ export function applyBlur(
     width + blurPx * 2,
     height + blurPx * 2
   );
-
-  // Step 2: 픽셀화 (pixelation) 적용 - blur 효과와 결합
-  // blur보다 더 작은 픽셀 블록으로 모자이크와 차별화
-  const faceSize = Math.min(width, height);
-  const PIXEL_BLOCK_SIZE = Math.max(3, Math.floor(faceSize / 16));
-
-  // 임시 캔버스로 픽셀화 적용
-  const tempCanvas = document.createElement('canvas');
-  const tempCtx = tempCanvas.getContext('2d');
-  if (!tempCtx) {
-    ctx.restore();
-    return;
-  }
-
-  tempCanvas.width = width;
-  tempCanvas.height = height;
-
-  // 작은 크기로 다운샘플링
-  tempCtx.drawImage(
-    ctx.canvas,
-    x,
-    y,
-    width,
-    height,
-    0,
-    0,
-    PIXEL_BLOCK_SIZE,
-    PIXEL_BLOCK_SIZE
-  );
-
-  // 원래 크기로 업샘플링 (픽셀화 효과)
-  ctx.filter = 'none';
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(
-    tempCanvas,
-    0,
-    0,
-    PIXEL_BLOCK_SIZE,
-    PIXEL_BLOCK_SIZE,
-    x,
-    y,
-    width,
-    height
-  );
-  ctx.imageSmoothingEnabled = true;
 
   ctx.restore();
 }
