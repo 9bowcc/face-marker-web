@@ -1,6 +1,7 @@
 import { FaceDetector, FilesetResolver, Detection } from '@mediapipe/tasks-vision';
-import { DetectedFace, DetectionOptions } from '../types';
+import { DetectedFace, DetectionOptions, BoundingBox } from '../types';
 import { generateId } from '../utils/imageUtils';
+import { extractFaceThumbnail } from '../utils/canvasUtils';
 
 let detector: FaceDetector | null = null;
 let isInitialized = false;
@@ -43,7 +44,7 @@ export function isMediaPipeReady(): boolean {
 
 export async function detectFacesWithMediaPipe(
   image: HTMLImageElement | HTMLCanvasElement,
-  options: Partial<DetectionOptions> = {}
+  options: Partial<DetectionOptions> & { sourceCanvas?: HTMLCanvasElement } = {}
 ): Promise<DetectedFace[]> {
   if (!detector) {
     await initializeMediaPipe();
@@ -57,13 +58,13 @@ export async function detectFacesWithMediaPipe(
 
   try {
     const result = detector.detect(image);
-    
-    return result.detections
+
+    const faces: DetectedFace[] = result.detections
       .filter((d: Detection) => (d.categories?.[0]?.score ?? 0) >= opts.minConfidence)
       .slice(0, opts.maxFaces)
       .map((detection: Detection): DetectedFace => {
         const box = detection.boundingBox!;
-        return {
+        const face: DetectedFace = {
           id: generateId(),
           x: box.originX,
           y: box.originY,
@@ -73,7 +74,21 @@ export async function detectFacesWithMediaPipe(
           isSelected: true,
           detectedBy: 'mediapipe',
         };
+
+        if (opts.sourceCanvas) {
+          const region: BoundingBox = {
+            x: face.x,
+            y: face.y,
+            width: face.width,
+            height: face.height,
+          };
+          face.thumbnail = extractFaceThumbnail(opts.sourceCanvas, region);
+        }
+
+        return face;
       });
+
+    return faces;
   } catch (error) {
     console.error('MediaPipe detection error:', error);
     throw new Error('Face detection failed');

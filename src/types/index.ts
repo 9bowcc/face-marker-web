@@ -19,6 +19,7 @@ export interface DetectedFace {
   confidence: number;
   isSelected: boolean;
   detectedBy: 'mediapipe' | 'faceapi';
+  thumbnail?: string;
 }
 
 export interface MaskConfiguration {
@@ -54,6 +55,20 @@ export interface DetectionOptions {
   minConfidence: number;
   maxFaces: number;
 }
+
+export type SensitivityLevel = 'low' | 'medium' | 'high';
+
+export const SENSITIVITY_CONFIG: Record<SensitivityLevel, number> = {
+  low: 0.5,
+  medium: 0.3,
+  high: 0.1,
+};
+
+export const SENSITIVITY_LABELS: Record<SensitivityLevel, string> = {
+  low: 'Low (Strict)',
+  medium: 'Medium',
+  high: 'High (Permissive)',
+};
 
 export const EMOJI_PRESETS = [
   '😊', '😀', '😎', '🙈', '🙂', '😺',

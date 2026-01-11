@@ -1,6 +1,7 @@
 import * as faceapi from 'face-api.js';
-import { DetectedFace, DetectionOptions } from '../types';
+import { DetectedFace, DetectionOptions, BoundingBox } from '../types';
 import { generateId } from '../utils/imageUtils';
+import { extractFaceThumbnail } from '../utils/canvasUtils';
 
 let isInitialized = false;
 
@@ -63,7 +64,7 @@ export function isFaceApiReady(): boolean {
 
 export async function detectFacesWithFaceApi(
   image: HTMLImageElement | HTMLCanvasElement,
-  options: Partial<DetectionOptions> = {}
+  options: Partial<DetectionOptions> & { sourceCanvas?: HTMLCanvasElement } = {}
 ): Promise<DetectedFace[]> {
   if (!isInitialized) {
     await initializeFaceApi();
@@ -78,7 +79,7 @@ export async function detectFacesWithFaceApi(
         minConfidence: opts.minConfidence,
       })
     );
-    
+
     const tinyDetections = await faceapi.detectAllFaces(
       image,
       new faceapi.TinyFaceDetectorOptions({
@@ -86,15 +87,15 @@ export async function detectFacesWithFaceApi(
         scoreThreshold: opts.minConfidence,
       })
     );
-    
+
     const allDetections = [...ssdDetections, ...tinyDetections];
     const uniqueDetections = removeDuplicateDetections(allDetections);
 
-    return uniqueDetections
+    const faces: DetectedFace[] = uniqueDetections
       .slice(0, opts.maxFaces)
       .map((detection): DetectedFace => {
         const box = detection.box;
-        return {
+        const face: DetectedFace = {
           id: generateId(),
           x: box.x,
           y: box.y,
@@ -104,7 +105,21 @@ export async function detectFacesWithFaceApi(
           isSelected: true,
           detectedBy: 'faceapi',
         };
+
+        if (opts.sourceCanvas) {
+          const region: BoundingBox = {
+            x: face.x,
+            y: face.y,
+            width: face.width,
+            height: face.height,
+          };
+          face.thumbnail = extractFaceThumbnail(opts.sourceCanvas, region);
+        }
+
+        return face;
       });
+
+    return faces;
   } catch (error) {
     console.error('face-api.js detection error:', error);
     throw new Error('Face detection failed');

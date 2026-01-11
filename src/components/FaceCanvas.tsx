@@ -1,4 +1,4 @@
-import { useEffect, useRef, RefObject } from 'react';
+import { useEffect, useRef, RefObject, useCallback } from 'react';
 import { Box } from '@mui/material';
 import { DetectedFace, MaskConfiguration } from '../types';
 import { loadImageToCanvas } from '../utils/imageUtils';
@@ -26,22 +26,7 @@ export function FaceCanvas({
   const imageRef = useRef<HTMLImageElement | null>(null);
   const canvasRef = externalCanvasRef || internalCanvasRef;
 
-  useEffect(() => {
-    if (!imageSrc || !canvasRef.current) return;
-
-    loadImageToCanvas(imageSrc, canvasRef.current)
-      .then((img) => {
-        imageRef.current = img;
-        renderCanvas();
-      })
-      .catch(console.error);
-  }, [imageSrc]);
-
-  useEffect(() => {
-    renderCanvas();
-  }, [faces, maskConfig, zoomLevel]);
-
-  const renderCanvas = () => {
+  const renderCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const displayCanvas = displayCanvasRef.current;
     const img = imageRef.current;
@@ -82,7 +67,22 @@ export function FaceCanvas({
     for (const face of faces) {
       drawBoundingBox(displayCtx, face, { selected: face.isSelected });
     }
-  };
+  }, [faces, maskConfig, canvasRef]);
+
+  useEffect(() => {
+    if (!imageSrc || !canvasRef.current) return;
+
+    loadImageToCanvas(imageSrc, canvasRef.current)
+      .then((img) => {
+        imageRef.current = img;
+        renderCanvas();
+      })
+      .catch(console.error);
+  }, [imageSrc, canvasRef, renderCanvas]);
+
+  useEffect(() => {
+    renderCanvas();
+  }, [renderCanvas]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = displayCanvasRef.current;

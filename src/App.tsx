@@ -15,6 +15,7 @@ import { MaskControls } from './components/MaskControls';
 import { ModelSelector } from './components/ModelSelector';
 import { DownloadButton } from './components/DownloadButton';
 import { FaceList } from './components/FaceList';
+import { SensitivitySelector } from './components/SensitivitySelector';
 import { useFaceDetection } from './hooks/useFaceDetection';
 import { useImageProcessor } from './hooks/useImageProcessor';
 import { useMaskConfiguration } from './hooks/useMaskConfiguration';
@@ -24,13 +25,16 @@ import {
   MediaFile,
   ExportOptions,
   DEFAULT_EXPORT_OPTIONS,
+  SensitivityLevel,
+  SENSITIVITY_CONFIG,
 } from './types';
-import { fileToMediaFile, revokeBlobURL } from './utils/imageUtils';
+import { fileToMediaFile, revokeBlobURL, validateFile } from './utils/imageUtils';
 
 function App() {
   const [mediaFile, setMediaFile] = useState<MediaFile | null>(null);
   const [faces, setFaces] = useState<DetectedFace[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [sensitivity, setSensitivity] = useState<SensitivityLevel>('medium');
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const {
@@ -60,7 +64,12 @@ function App() {
         setError(null);
         setFaces([]);
 
-        // Cleanup previous blob
+        const validation = validateFile(file);
+        if (!validation.valid) {
+          setError(validation.error || 'Invalid file');
+          return;
+        }
+
         if (mediaFile?.blobUrl) {
           revokeBlobURL(mediaFile.blobUrl);
         }
@@ -85,7 +94,10 @@ function App() {
         const blob = await response.blob();
         const file = new File([blob], 'image', { type: mediaFile.mimeType });
         const img = await loadImage(file, canvasRef.current!);
-        const detectedFaces = await detectFaces(img);
+        const detectedFaces = await detectFaces(img, {
+          sourceCanvas: canvasRef.current || undefined,
+          minConfidence: SENSITIVITY_CONFIG[sensitivity],
+        });
         setFaces(detectedFaces);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to detect faces');
@@ -93,7 +105,7 @@ function App() {
     };
 
     runDetection();
-  }, [mediaFile, loadImage, detectFaces]);
+  }, [mediaFile, loadImage, detectFaces, sensitivity]);
 
   const handleFaceClick = useCallback((faceId: string) => {
     setFaces((prev) =>
@@ -163,11 +175,18 @@ function App() {
             <Box sx={{ flex: 1 }}>
               <ImageUpload onFileSelect={handleFileSelect} disabled={isDetecting} />
             </Box>
-            <ModelSelector
-              activeDetector={activeDetector}
-              onSwitch={switchDetector}
-              disabled={isDetecting || !isReady}
-            />
+            <Stack direction="row" spacing={2}>
+              <ModelSelector
+                activeDetector={activeDetector}
+                onSwitch={switchDetector}
+                disabled={isDetecting || !isReady}
+              />
+              <SensitivitySelector
+                sensitivity={sensitivity}
+                onChange={setSensitivity}
+                disabled={isDetecting || !isReady}
+              />
+            </Stack>
           </Stack>
         </Paper>
 

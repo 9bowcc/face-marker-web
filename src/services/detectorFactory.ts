@@ -76,11 +76,11 @@ const MIN_FACES_FOR_AUTO_FALLBACK = 3;
 
 export async function detectFaces(
   image: HTMLImageElement | HTMLCanvasElement,
-  options?: Partial<DetectionOptions>
+  options?: Partial<DetectionOptions> & { sourceCanvas?: HTMLCanvasElement }
 ): Promise<DetectedFace[]> {
   const loadedDetectors = await ensureDetectorsLoaded();
   const faces = await loadedDetectors[currentDetectorType].detect(image, options);
-  
+
   if (currentDetectorType === 'mediapipe' && faces.length <= MIN_FACES_FOR_AUTO_FALLBACK) {
     try {
       if (!loadedDetectors.faceapi.isReady()) {
@@ -94,7 +94,7 @@ export async function detectFaces(
       return faces;
     }
   }
-  
+
   return faces;
 }
 

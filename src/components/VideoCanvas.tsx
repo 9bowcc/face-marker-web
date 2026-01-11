@@ -56,6 +56,7 @@ export function VideoCanvas({
 
     if (!ctx) return;
 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
     processVideoFrame(video, canvas, faces, maskConfig);

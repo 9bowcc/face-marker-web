@@ -142,3 +142,39 @@ export function clearCanvas(canvas: HTMLCanvasElement): void {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
   }
 }
+
+export function extractFaceThumbnail(
+  sourceCanvas: HTMLCanvasElement,
+  region: BoundingBox,
+  thumbnailSize: number = 80
+): string {
+  const ctx = sourceCanvas.getContext('2d');
+  if (!ctx) {
+    throw new Error('Failed to get canvas context');
+  }
+
+  const { x, y, width, height } = region;
+
+  const thumbnailCanvas = document.createElement('canvas');
+  thumbnailCanvas.width = thumbnailSize;
+  thumbnailCanvas.height = thumbnailSize;
+  const thumbnailCtx = thumbnailCanvas.getContext('2d');
+
+  if (!thumbnailCtx) {
+    throw new Error('Failed to create thumbnail canvas context');
+  }
+
+  thumbnailCtx.drawImage(
+    sourceCanvas,
+    x,
+    y,
+    width,
+    height,
+    0,
+    0,
+    thumbnailSize,
+    thumbnailSize
+  );
+
+  return thumbnailCanvas.toDataURL('image/jpeg', 0.8);
+}

@@ -76,14 +76,15 @@ export function FaceList({
             }}
           >
             <Avatar
+              src={face.thumbnail}
               sx={{
-                width: 32,
-                height: 32,
+                width: 40,
+                height: 40,
                 bgcolor: face.isSelected ? 'primary.main' : 'grey.400',
                 fontSize: '0.875rem',
               }}
             >
-              {index + 1}
+              {!face.thumbnail && index + 1}
             </Avatar>
             <Box sx={{ ml: 1.5, flex: 1 }}>
               <Typography variant="body2">Face {index + 1}</Typography>

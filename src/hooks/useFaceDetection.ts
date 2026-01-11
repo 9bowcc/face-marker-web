@@ -13,7 +13,7 @@ interface UseFaceDetectionOptions {
 }
 
 interface UseFaceDetectionResult {
-  detectFaces: (image: HTMLImageElement) => Promise<DetectedFace[]>;
+  detectFaces: (image: HTMLImageElement, options?: Partial<DetectionOptions> & { sourceCanvas?: HTMLCanvasElement }) => Promise<DetectedFace[]>;
   faces: DetectedFace[];
   isDetecting: boolean;
   error: string | null;
@@ -57,15 +57,15 @@ export function useFaceDetection(
   }, [options.detector]);
 
   const detectFaces = useCallback(
-    async (image: HTMLImageElement): Promise<DetectedFace[]> => {
+    async (image: HTMLImageElement, detectOptions?: Partial<DetectionOptions> & { sourceCanvas?: HTMLCanvasElement }): Promise<DetectedFace[]> => {
       setIsDetecting(true);
       setError(null);
 
       try {
-        const detectionOptions: Partial<DetectionOptions> = {};
-        if (options.minConfidence !== undefined) {
-          detectionOptions.minConfidence = options.minConfidence;
-        }
+        const detectionOptions: Partial<DetectionOptions> & { sourceCanvas?: HTMLCanvasElement } = {
+          minConfidence: detectOptions?.minConfidence ?? options.minConfidence,
+          sourceCanvas: detectOptions?.sourceCanvas,
+        };
 
         const detected = await detectFacesService(image, detectionOptions);
         setFaces(detected);
